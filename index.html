@@ -761,6 +761,42 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
 #perf-table thead:last-child th:nth-child(5) { position: sticky !important; left: 424  !important; top: 41px !important; z-index: 13; }
 #perf-table thead:last-child th:nth-child(6) { position: sticky !important; left: 584  !important; top: 41px !important; z-index: 13; }
 
+/* ───── AI+Writer Cracked table — freeze S.No + Show Name ───── */
+#aiwc-table th:nth-child(1), #aiwc-table td:nth-child(1) {
+  position: sticky !important; left: 0 !important; z-index: 3;
+  min-width: 44px; max-width: 44px; width: 44px;
+}
+#aiwc-table th:nth-child(2), #aiwc-table td:nth-child(2) {
+  position: sticky !important; left: 44px !important; z-index: 3;
+  min-width: 220px; max-width: 220px; width: 220px;
+  border-right: 2px solid var(--border) !important;
+}
+#aiwc-table thead tr th:nth-child(1),
+#aiwc-table thead tr th:nth-child(2) { background: var(--bg2) !important; z-index: 11; }
+#aiwc-table tr:nth-child(even) td:nth-child(1),
+#aiwc-table tr:nth-child(even) td:nth-child(2) {
+  background: color-mix(in srgb, var(--bg2) 40%, var(--card)) !important;
+}
+#aiwc-table tr:hover td:nth-child(1),
+#aiwc-table tr:hover td:nth-child(2) {
+  background: color-mix(in srgb, var(--teal) 5%, var(--card)) !important;
+}
+/* Benchmark row sticky positioning */
+#aiwc-table thead:first-child tr.benchmark-row td {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 8;
+  background: color-mix(in srgb, var(--yellow) 10%, var(--bg2)) !important;
+  border-top: 2px solid color-mix(in srgb, var(--yellow) 50%, transparent) !important;
+  border-bottom: 3px solid color-mix(in srgb, var(--yellow) 60%, transparent) !important;
+}
+#aiwc-table thead:first-child tr.benchmark-row td:nth-child(1) { left: 0    !important; top: 0 !important; z-index: 13 !important; }
+#aiwc-table thead:first-child tr.benchmark-row td:nth-child(2) { left: 44px !important; top: 0 !important; z-index: 13 !important; }
+/* Column header row sticky positions — note we may have 1 OR 2 benchmark rows */
+#aiwc-table thead:last-child tr th { position: sticky; top: 41px; z-index: 10; background: var(--bg2); }
+#aiwc-table thead:last-child th:nth-child(1) { position: sticky !important; left: 0    !important; top: 41px !important; z-index: 13; }
+#aiwc-table thead:last-child th:nth-child(2) { position: sticky !important; left: 44px !important; top: 41px !important; z-index: 13; border-right: 2px solid var(--border) !important; }
+
 </style>
 </head>
 <body>
@@ -772,6 +808,7 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
     <button class="nav-tab active" onclick="switchPage('page-p120', this)">⭐ April Launch</button>
     <button class="nav-tab" onclick="switchPage('page-may', this)">🌟 May Launch</button>
     <button class="nav-tab" onclick="switchPage('page-perf', this)">📈 Performance D7H5</button>
+    <button class="nav-tab" onclick="switchPage('page-aiwc', this)">🤖 AI+Writer Cracked</button>
     <button class="nav-tab" onclick="switchPage('page-all', this)">📊 All Shows</button>
   </nav>
 </header>
@@ -946,6 +983,47 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
   </div>
 </div>
 
+<div id="page-aiwc" class="page">
+  <div class="filter-bar">
+    <span class="filter-label">Filter</span>
+    <select class="filter-select" id="aiwc-f-platform" onchange="renderAiwcTable()"><option value="">All Platforms</option></select>
+    <select class="filter-select" id="aiwc-f-subgenre" onchange="renderAiwcTable()"><option value="">All Sub-Genres</option></select>
+    <select class="filter-select" id="aiwc-f-maturity" onchange="renderAiwcTable()"><option value="">All Maturities</option></select>
+    <input class="search-input" type="text" id="aiwc-search" placeholder="Search shows, sub-genres…" oninput="renderAiwcTable()">
+    <button class="reset-btn" onclick="resetAiwc()">✕ Reset</button>
+    <span class="filter-result-count" id="aiwc-filter-count">— shows</span>
+  </div>
+  <div class="stats-strip" id="aiwc-stats-strip"></div>
+  <div class="table-section">
+    <div class="table-header-row">
+      <span class="table-section-title">AI + Writer Cracked — Show Rankings</span>
+      <span class="table-count-badge" id="aiwc-tbl-count">0 shows</span>
+    </div>
+    <div class="table-wrap-outer">
+      <div class="table-wrap">
+        <table class="main-table" id="aiwc-table">
+          <thead id="aiwc-benchmark-head"></thead>
+          <thead><tr id="aiwc-col-row">
+            <th>S.No</th>
+            <th data-col="show_title" onclick="sortAiwcTable(this)">Show Name</th>
+            <th data-col="Source Name" onclick="sortAiwcTable(this)">Source</th>
+            <th data-col="Platform" onclick="sortAiwcTable(this)">Platform</th>
+            <th data-col="Sub-Genre" onclick="sortAiwcTable(this)">Sub-Genre</th>
+            <th data-col="Show Length" onclick="sortAiwcTable(this)">Length</th>
+            <th data-col="Maturity Days" onclick="sortAiwcTable(this)">Maturity</th>
+            <th data-col="True Ldau" onclick="sortAiwcTable(this)">True LDAU</th>
+            <th data-col="H5_Ret" onclick="sortAiwcTable(this)" class="sort-desc">H5 Ret.</th>
+            <th data-col="H10_Ret" onclick="sortAiwcTable(this)">H10 Ret.</th>
+            <th data-col="H20_Ret" onclick="sortAiwcTable(this)">H20 Ret.</th>
+            <th data-col="H30_Ret" onclick="sortAiwcTable(this)">H30 Ret.</th>
+          </tr></thead>
+          <tbody id="aiwc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="page-all" class="page">
   <div class="filter-bar" id="all-filter-bar">
     <span class="filter-label">Filter</span>
@@ -1015,6 +1093,9 @@ function genreColor(g) { if (!genreColorMap[g]) genreColorMap[g] = colorIdx++ % 
 
 const sortState = { p120: { col: 'Show Name', dir: 'asc' }, may: { col: 'Show Name', dir: 'asc' }, all: { col: 'Show Name', dir: 'asc' } };
 const perfSort = { col: 'H5_Ret_D7', dir: 'desc' };
+const aiwcSort = { col: 'H5_Ret', dir: 'desc' };
+let AIWC_DATA = [];
+let AIWC_BENCHMARKS = [];
 
 function switchPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1527,6 +1608,170 @@ function renderPerfTable() {
   tbody.innerHTML = filtered.map((d, i) => buildRow(d, i+1, false)).join('');
 }
 
+// ═══════════════════════════════════════════════════════════════
+// AI + Writer Cracked — same structure as Performance D7H5
+// ═══════════════════════════════════════════════════════════════
+function buildAiwcFilters() {
+  const vals = {
+    'aiwc-f-platform': [...new Set(AIWC_DATA.map(d=>d['Platform']))].filter(Boolean).sort(),
+    'aiwc-f-subgenre': [...new Set(AIWC_DATA.map(d=>d['Sub-Genre']))].filter(Boolean).sort(),
+    'aiwc-f-maturity': [...new Set(AIWC_DATA.map(d=>d['Maturity Days']))].filter(Boolean).sort(),
+  };
+  for (const [id, opts] of Object.entries(vals)) {
+    const sel = document.getElementById(id);
+    if (!sel) continue;
+    while (sel.options.length > 1) sel.remove(1);
+    opts.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+  }
+}
+function resetAiwc() {
+  ['aiwc-f-platform','aiwc-f-subgenre','aiwc-f-maturity'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const s = document.getElementById('aiwc-search'); if (s) s.value = '';
+  renderAiwcTable();
+}
+function sortAiwcTable(th) {
+  const col = th.dataset.col;
+  if (aiwcSort.col === col) aiwcSort.dir = aiwcSort.dir === 'asc' ? 'desc' : 'asc';
+  else { aiwcSort.col = col; aiwcSort.dir = 'asc'; }
+  document.querySelectorAll('#aiwc-table th').forEach(t => t.classList.remove('sort-asc','sort-desc'));
+  th.classList.add(aiwcSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+  renderAiwcTable();
+}
+function renderAiwcTable() {
+  const platform = (document.getElementById('aiwc-f-platform') || {}).value || '';
+  const subgenre = (document.getElementById('aiwc-f-subgenre') || {}).value || '';
+  const maturity = (document.getElementById('aiwc-f-maturity') || {}).value || '';
+  const search   = ((document.getElementById('aiwc-search') || {}).value || '').toLowerCase();
+
+  let filtered = AIWC_DATA.filter(d => {
+    if (platform && d['Platform'] !== platform) return false;
+    if (subgenre && d['Sub-Genre'] !== subgenre) return false;
+    if (maturity && d['Maturity Days'] !== maturity) return false;
+    if (search && !JSON.stringify(d).toLowerCase().includes(search)) return false;
+    return true;
+  });
+  filtered = [...filtered].sort((a, b) => {
+    const av = a[aiwcSort.col] ?? 0, bv = b[aiwcSort.col] ?? 0;
+    const isNum = typeof av === 'number' || (av !== '' && !isNaN(parseFloat(av)));
+    if (isNum) return aiwcSort.dir === 'asc' ? parseFloat(av) - parseFloat(bv) : parseFloat(bv) - parseFloat(av);
+    return aiwcSort.dir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+  });
+
+  const total = filtered.length;
+  document.getElementById('aiwc-filter-count').textContent = `${total} of ${AIWC_DATA.length} shows`;
+  document.getElementById('aiwc-tbl-count').textContent = `${total} show${total !== 1 ? 's' : ''}`;
+
+  const avgLen = total ? (filtered.reduce((s,d)=>s+(parseFloat(d['Show Length'])||0),0)/total).toFixed(1) : 0;
+  const maxH5  = total ? Math.max(...filtered.map(d=>parseFloat(d['H5_Ret'])||0)).toFixed(1) : 0;
+  const maxH10 = total ? Math.max(...filtered.map(d=>parseFloat(d['H10_Ret'])||0)).toFixed(1) : 0;
+  document.getElementById('aiwc-stats-strip').innerHTML = `
+    <div class="stat-item"><div class="stat-num a">${total}</div><div class="stat-lbl">Shows</div></div>
+    <div class="stat-item"><div class="stat-num t">${avgLen}h</div><div class="stat-lbl">Avg Length</div></div>
+    <div class="stat-item"><div class="stat-num" style="color:var(--green)">${maxH5}%</div><div class="stat-lbl">Top H5 Ret.</div></div>
+    <div class="stat-item"><div class="stat-num p">${maxH10}%</div><div class="stat-lbl">Top H10 Ret.</div></div>
+  `;
+
+  // Pick benchmark to display — if user filtered by Maturity, show the matching one; else show D14 first then D7
+  let visibleBenchmarks = AIWC_BENCHMARKS;
+  if (maturity) {
+    visibleBenchmarks = AIWC_BENCHMARKS.filter(b => (b['Maturity Days']||'').trim() === maturity);
+  }
+
+  const allRows = [...visibleBenchmarks, ...filtered];
+  const maxH5all  = Math.max(...allRows.map(d=>parseFloat(d['H5_Ret'])||0));
+  const maxH10all = Math.max(...allRows.map(d=>parseFloat(d['H10_Ret'])||0));
+  const maxH20all = Math.max(...allRows.map(d=>parseFloat(d['H20_Ret'])||0));
+  const maxH30all = Math.max(...allRows.map(d=>parseFloat(d['H30_Ret'])||0));
+  const maxLdauAll = Math.max(...allRows.map(d=>parseFloat(d['True Ldau'])||0));
+
+  function buildRow(d, rankLabel, isBenchmark) {
+    const h5v  = d['H5_Ret']  != null && d['H5_Ret']  !== '' ? parseFloat(d['H5_Ret'])  : null;
+    const h10v = d['H10_Ret'] != null && d['H10_Ret'] !== '' ? parseFloat(d['H10_Ret']) : null;
+    const h20v = d['H20_Ret'] != null && d['H20_Ret'] !== '' ? parseFloat(d['H20_Ret']) : null;
+    const h30v = d['H30_Ret'] != null && d['H30_Ret'] !== '' ? parseFloat(d['H30_Ret']) : null;
+    const ldauv = d['True Ldau'] != null && d['True Ldau'] !== '' ? parseFloat(d['True Ldau']) : null;
+    const lenv  = d['Show Length'] != null && d['Show Length'] !== '' ? parseFloat(d['Show Length']) : null;
+
+    const h5  = h5v  != null ? h5v.toFixed(2)  : '—';
+    const h10 = h10v != null ? h10v.toFixed(2) : '—';
+    const h20 = h20v != null ? h20v.toFixed(2) : '—';
+    const h30 = h30v != null ? h30v.toFixed(2) : '—';
+    const ldau = ldauv != null ? Math.round(ldauv).toLocaleString() : (isBenchmark ? (d['True Ldau']||'—') : '—');
+    const len  = lenv != null ? `<span class="len-cell">${lenv.toFixed(1)}h</span>` : '—';
+
+    const h5Cls  = h5v  != null ? perfColor(h5v,  maxH5all)  : '';
+    const h10Cls = h10v != null ? perfColor(h10v, maxH10all) : '';
+    const h20Cls = h20v != null ? perfColor(h20v, maxH20all) : '';
+    const h30Cls = h30v != null ? perfColor(h30v, maxH30all) : '';
+    const ldauCls = ldauv != null ? perfColor(ldauv, maxLdauAll) : '';
+
+    const h5Bar  = h5v  != null && maxH5all  ? Math.round(h5v /maxH5all *100) : 0;
+    const h10Bar = h10v != null && maxH10all ? Math.round(h10v/maxH10all*100) : 0;
+    const h20Bar = h20v != null && maxH20all ? Math.round(h20v/maxH20all*100) : 0;
+    const h30Bar = h30v != null && maxH30all ? Math.round(h30v/maxH30all*100) : 0;
+
+    // Show Name → CMS Link (look up via Show ID in catalogue if missing)
+    let cmsLink = d['CMS Link'] || '';
+    if (!cmsLink && d['Show ID']) {
+      const match = DATA.find(c => c['Show ID'] === d['Show ID']);
+      if (match) cmsLink = match['CMS Link'] || '';
+    }
+    if (cmsLink && !cmsLink.startsWith('http')) cmsLink = 'https://' + cmsLink;
+    const titleHtml = esc(d['show_title']||'—');
+    const titleLinked = cmsLink
+      ? `<a href="${esc(cmsLink)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(26,122,110,0.35);">${titleHtml}</a>`
+      : titleHtml;
+    const nameCell = isBenchmark
+      ? `${titleHtml}<span class="benchmark-tag">Benchmark</span>`
+      : titleLinked;
+
+    // Source → Clean URL lookup
+    let cleanUrl = d['Clean URL'] || '';
+    if (!cleanUrl && d['Show ID']) {
+      const m = DATA.find(c => c['Show ID'] === d['Show ID']);
+      if (m) cleanUrl = m['Clean URL'] || '';
+    }
+    if (cleanUrl && !String(cleanUrl).startsWith('http')) cleanUrl = 'https://' + cleanUrl;
+    const sourceCell = isBenchmark
+      ? '<span style="color:var(--text4)">—</span>'
+      : (d['Source Name']
+          ? (cleanUrl
+              ? `<a href="${esc(cleanUrl)}" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none;border-bottom:1px solid var(--teal);">${esc(d['Source Name'])}</a>`
+              : esc(d['Source Name']))
+          : '—');
+
+    const platCell = isBenchmark ? '<span style="color:var(--text4)">—</span>' : esc(d['Platform']||'—');
+    const subCell  = isBenchmark ? '<span style="color:var(--text4)">—</span>' : esc(d['Sub-Genre']||'—');
+    const matCell  = `<span class="pipeline-chip">${esc(d['Maturity Days']||'—')}</span>`;
+
+    return `<tr class="${isBenchmark ? 'benchmark-row' : ''}">
+      <td class="rank-cell">${rankLabel}</td>
+      <td class="show-name">${nameCell}</td>
+      <td>${sourceCell}</td>
+      <td>${platCell}</td>
+      <td>${subCell}</td>
+      <td>${len}</td>
+      <td>${matCell}</td>
+      <td><span class="metric-cell ${ldauCls}">${ldau}</span></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h5Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h5Cls}">${h5v != null ? h5+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h10Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h10Cls}">${h10v != null ? h10+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h20Bar}%;background:var(--purple)"></div></div><span class="metric-cell ${h20Cls}">${h20v != null ? h20+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h30Bar}%;background:var(--purple)"></div></div><span class="metric-cell ${h30Cls}">${h30v != null ? h30+'%' : '—'}</span></div></td>
+    </tr>`;
+  }
+
+  // Render benchmark rows (TROT D14 / D7)
+  document.getElementById('aiwc-benchmark-head').innerHTML =
+    visibleBenchmarks.map(b => buildRow(b, 'BM', true)).join('');
+
+  const tbody = document.getElementById('aiwc-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map((d, i) => buildRow(d, i+1, false)).join('');
+}
+
 function openLogline(el) {
   document.getElementById('modal-show-name').textContent = el.dataset.show;
   document.getElementById('modal-logline').textContent = el.dataset.logline;
@@ -1553,12 +1798,14 @@ function renderAll() {
   buildMayFilters();
   buildAllFilters();
   buildPerfFilters();
+  buildAiwcFilters();
   renderGenreSummaryTable(P120);
   renderGenreSummaryTableMay(MAY);
   renderP120Table();
   renderMayTable();
   renderAllTable();
   renderPerfTable();
+  renderAiwcTable();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1777,10 +2024,79 @@ function rowsToPerf(header, rows) {
   });
 }
 
+// ─── AI + Writer Cracked parser ───────────────────────────────
+// This sheet has 2 "benchmark" rows ABOVE the header row (TROT D14 + TROT D7),
+// then a header row, then the actual show rows.
+function rowsToAiwc(header, rows) {
+  const i = {
+    id:     findCol(header, 'Show ID', 'showid'),
+    title:  findCol(header, 'show_title', 'Show Title', 'Show Name', 'Title'),
+    source: findCol(header, 'Source Name', 'source', 'sourcename'),
+    plat:   findCol(header, 'Platform'),
+    sub:    findCol(header, 'Sub-Genre', 'Sub Genre', 'Subgenre'),
+    len:    findCol(header, 'Show Length', 'Length'),
+    ldau:   findCol(header, 'True Ldau', 'Ldau', 'True LDAU', 'LDAU'),
+    mat:    findCol(header, 'Maturity Days', 'Maturity', 'Maturity_Days'),
+    h5:     findCol(header, 'H5 Ret.', 'H5 Ret', 'H5_Ret', 'H5 Ret D7', 'H5_Ret_D7'),
+    h10:    findCol(header, 'H10 Ret.', 'H10 Ret', 'H10_Ret', 'H10 Ret D7', 'H10_Ret_D7'),
+    h20:    findCol(header, 'H20 Ret.', 'H20 Ret', 'H20_Ret', 'H20 Ret D7'),
+    h30:    findCol(header, 'H30 Ret.', 'H30 Ret', 'H30_Ret', 'H30 Ret D7'),
+  };
+  console.log('[Dashboard] aiwc cols →', { title: header[i.title], h5: header[i.h5], h10: header[i.h10], h20: header[i.h20], h30: header[i.h30], mat: header[i.mat] });
+  return rows.filter(r => (r[i.title]||'').trim() !== '').map(r => ({
+    'Show ID':       (r[i.id]||'').trim(),
+    'show_title':    (r[i.title]||'').trim(),
+    'Source Name':   (r[i.source]||'').trim(),
+    'Platform':      (r[i.plat]||'').trim(),
+    'Sub-Genre':     (r[i.sub]||'').trim(),
+    'Show Length':   toNum(r[i.len]),
+    'True Ldau':     toNum(r[i.ldau]),
+    'Maturity Days': (r[i.mat]||'').trim(),
+    'H5_Ret':        toNum(r[i.h5]),
+    'H10_Ret':       toNum(r[i.h10]),
+    'H20_Ret':       toNum(r[i.h20]),
+    'H30_Ret':       toNum(r[i.h30]),
+  }));
+}
+
+// Extracts the TROT benchmark rows (rows above the header that have "Whales +" or "TROT" content)
+function extractAiwcBenchmarks(rows, headerIdx) {
+  // Look at rows BEFORE the header row. Use positional indexing since these rows
+  // don't always align with the header columns.
+  // Sheet layout: A=Show ID, B=show_title (here "Whales +"), C=Source, D=Platform,
+  // E=Sub-Genre, F=Show Length, G=True Ldau (here "TROT" descriptor), H=Maturity Days
+  // (here "D14" / "D7"), I=H5, J=H10, K=H20, L=H30.
+  const benchmarks = [];
+  for (let r = 0; r < headerIdx; r++) {
+    const row = rows[r] || [];
+    const tag = (row[1] || '').trim();        // col B
+    const refName = (row[6] || '').trim();    // col G
+    const mat = (row[7] || '').trim();        // col H
+    if (!tag && !refName) continue;           // skip totally empty rows
+    if (!/whales|trot|return.*tiger|benchmark/i.test(tag + ' ' + refName)) continue;
+    benchmarks.push({
+      'Show ID':       '',
+      'show_title':    refName || tag || 'Benchmark',
+      'Source Name':   '',
+      'Platform':      tag || '',
+      'Sub-Genre':     '',
+      'Show Length':   null,
+      'True Ldau':     refName || '—',
+      'Maturity Days': mat,
+      'H5_Ret':  toNum(row[8])  != null ? toNum(row[8])  : null,
+      'H10_Ret': toNum(row[9])  != null ? toNum(row[9])  : null,
+      'H20_Ret': toNum(row[10]) != null ? toNum(row[10]) : null,
+      'H30_Ret': toNum(row[11]) != null ? toNum(row[11]) : null,
+    });
+  }
+  return benchmarks;
+}
+
 // Public-CSV path (works on Netlify / any static host, requires sheet to be
 // shared "Anyone with the link can view" or Published-to-web)
 const CATALOGUE_GID = '40447257';
 const PERF_GID = '553248312';
+const AIWC_GID = '1461147986';
 function csvUrl(gid) {
   // Cache-bust so we never get a stale copy from browser or Google's CDN
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}&_t=${Date.now()}`;
@@ -1833,30 +2149,37 @@ async function fetchLive() {
     }
     if (!text) throw new Error('Empty response from Drive MCP');
     const tables = parseTables(text);
-    let cat = null, pf = null;
+    let cat = null, pf = null, aiwc = null;
     for (const t of tables) {
       const lo = t.header.map(h => String(h).toLowerCase());
       if (!cat && lo.includes('show name') && lo.includes('final genre')) cat = t;
+      else if (!aiwc && lo.includes('show_title') && lo.some(h => /maturity\s*days/.test(h))) aiwc = t;
       else if (!pf && lo.includes('show_title') && lo.includes('true ldau')) pf = t;
     }
     const newData = cat ? rowsToShows(cat.header, cat.rows) : null;
     const newPerf = pf  ? rowsToPerf(pf.header,  pf.rows)  : null;
-    if ((!newData || !newData.length) && (!newPerf || !newPerf.length)) throw new Error('No tables parsed');
-    return { newData, newPerf };
+    const newAiwc = aiwc ? rowsToAiwc(aiwc.header, aiwc.rows) : null;
+    // MCP path doesn't easily expose the rows ABOVE the header (parseTables
+    // starts at the header). So benchmarks remain whatever was last set
+    // (typically loaded once via the public-CSV path on first refresh).
+    if ((!newData || !newData.length) && (!newPerf || !newPerf.length) && (!newAiwc || !newAiwc.length)) throw new Error('No tables parsed');
+    return { newData, newPerf, newAiwc, newAiwcBenchmarks: null };
   }
 
   // Path B: Direct public CSV fetch (Netlify / any browser)
-  let catCsv, perfCsv;
+  let catCsv, perfCsv, aiwcCsv;
   try {
-    [catCsv, perfCsv] = await Promise.all([
+    [catCsv, perfCsv, aiwcCsv] = await Promise.all([
       fetchCsvViaPublic(CATALOGUE_GID),
       fetchCsvViaPublic(PERF_GID),
+      fetchCsvViaPublic(AIWC_GID),
     ]);
   } catch (e) {
     throw new Error(`Public-CSV fetch failed (${e.message}). Make the Sheet shareable: File → Share → Anyone with the link → Viewer.`);
   }
   const catRows = parseCSV(catCsv);
   const pfRows  = parseCSV(perfCsv);
+  const aiwcRows = parseCSV(aiwcCsv);
   if (!catRows.length || !pfRows.length) throw new Error('Empty CSV response from Sheet');
   // Scan the first 10 rows of each tab to auto-detect the header row.
   // The header row is whichever row contains the most known column names.
@@ -1878,6 +2201,15 @@ async function fetchLive() {
   console.log(`[Dashboard] performance header @ row ${pfPick.headerIdx+1}:`, pfHdr);
   const newData = rowsToShows(catHdr, catRows.slice(catPick.headerIdx + 1));
   const newPerf = rowsToPerf(pfHdr,  pfRows.slice(pfPick.headerIdx + 1));
+  // AIWC sheet — has 2 benchmark rows ABOVE the header.
+  let newAiwc = null, newAiwcBenchmarks = null;
+  if (aiwcRows.length) {
+    const aiwcPick = pickHeaderRow(aiwcRows, ['Show ID','show_title','Source Name','Platform','Sub-Genre','Show Length','True Ldau','Maturity Days','H5 Ret.','H10 Ret.','H20 Ret.','H30 Ret.']);
+    const aiwcHdr = aiwcRows[aiwcPick.headerIdx];
+    console.log(`[Dashboard] aiwc header @ row ${aiwcPick.headerIdx+1}:`, aiwcHdr);
+    newAiwc = rowsToAiwc(aiwcHdr, aiwcRows.slice(aiwcPick.headerIdx + 1));
+    newAiwcBenchmarks = extractAiwcBenchmarks(aiwcRows, aiwcPick.headerIdx);
+  }
   // Surface friendly errors if column matching failed
   if (catRows.length > 1 && !newData.length) {
     throw new Error(`Catalogue tab parsed 0 rows. Headers found: [${catHdr.join(' | ')}]. Need at least "Show Name".`);
@@ -1885,7 +2217,7 @@ async function fetchLive() {
   if (pfRows.length > 1 && !newPerf.length) {
     throw new Error(`Performance tab parsed 0 rows. Headers found: [${pfHdr.join(' | ')}]. Need at least one of "show_title" / "Show Title" / "Title".`);
   }
-  return { newData, newPerf };
+  return { newData, newPerf, newAiwc, newAiwcBenchmarks };
 }
 
 // ─── Auto-refresh loop ──────────────────────────────────────
@@ -1903,10 +2235,12 @@ async function refreshFromSheet() {
   _refreshing = true;
   setStatus('Fetching live data from Google Sheet…');
   try {
-    const { newData, newPerf } = await fetchLive();
+    const { newData, newPerf, newAiwc, newAiwcBenchmarks } = await fetchLive();
     if (newData && newData.length) DATA = newData;
     if (newPerf && newPerf.length) PERF_DATA = newPerf;
-    const sig = _sig(newData, newPerf);
+    if (newAiwc && newAiwc.length) AIWC_DATA = newAiwc;
+    if (newAiwcBenchmarks && newAiwcBenchmarks.length) AIWC_BENCHMARKS = newAiwcBenchmarks;
+    const sig = _sig(newData, newPerf) + '|' + (newAiwc ? newAiwc.length + ':' + (newAiwc[newAiwc.length-1]?.['show_title']||'') : '');
     const changed = sig !== _signature;
     _signature = sig;
     if (changed) renderAll();
@@ -1914,6 +2248,7 @@ async function refreshFromSheet() {
     const parts = [];
     if (newData && newData.length) parts.push(`${newData.length} catalogue`);
     if (newPerf && newPerf.length) parts.push(`${newPerf.length} performance`);
+    if (newAiwc && newAiwc.length) parts.push(`${newAiwc.length} aiwc`);
     setStatus(`Live · ${ts} · ${parts.join(' / ')}${changed ? ' · updated' : ''}`, 'ok');
   } catch (e) {
     setStatus(`Cached · ${(e.message || e).toString().slice(0, 120)}`, 'err');
