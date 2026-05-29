@@ -524,6 +524,8 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
 .d15-start { border-left: 2px solid var(--border) !important; }
 /* Column-name row sits below the group banner (41 + ~30) */
 #perf-table #perf-col-row th { top: 71px; }
+/* Give the Performance table room for at least ~10 rows under the taller header */
+#page-perf .table-wrap { max-height: 720px; }
 
 /* Frozen cols in benchmark row (left + top both set) */
 #perf-table thead:first-child tr.benchmark-row td:nth-child(1) { left: 0;     top: 0; z-index: 13 !important; }
@@ -1657,10 +1659,31 @@ function renderPerfTable() {
   document.getElementById('perf-benchmark-head').innerHTML = buildRow(BENCHMARK, 'BM', true);
   if (!filtered.length) {
     tbody.innerHTML = `<tr><td colspan="${19 + extraCols.length}"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
+    syncPerfStickyOffsets();
     return;
   }
   tbody.innerHTML = filtered.map((d, i) => buildRow(d, i+1, false)).join('');
+  syncPerfStickyOffsets();
 }
+
+// Pin the first 3 rows (TROT benchmark, D7/D15 banner, column names) flush to the
+// top of the scroll area by measuring their real heights instead of guessing px.
+function syncPerfStickyOffsets() {
+  const run = () => {
+    const benchRow = document.querySelector('#perf-benchmark-head tr');
+    const grpRow   = document.querySelector('#perf-cols-head .perf-grp');
+    const colRow   = document.getElementById('perf-col-row');
+    if (!grpRow || !colRow) return;
+    const bh = benchRow ? benchRow.offsetHeight : 0;
+    const gh = grpRow.offsetHeight;
+    // setProperty with 'important' so these beat the !important top rules in the CSS
+    if (benchRow) benchRow.querySelectorAll('td').forEach(td => td.style.setProperty('top', '0px', 'important'));
+    grpRow.querySelectorAll('th').forEach(th => th.style.setProperty('top', bh + 'px', 'important'));
+    colRow.querySelectorAll('th').forEach(th => th.style.setProperty('top', (bh + gh) + 'px', 'important'));
+  };
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run); else run();
+}
+window.addEventListener('resize', syncPerfStickyOffsets);
 
 // ═══════════════════════════════════════════════════════════════
 // AI + Writer Cracked — same structure as Performance D7H5
