@@ -774,6 +774,9 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
 /* Group banner row — keep labels scrolling with their columns, pinned just below benchmark */
 #perf-table .perf-grp th { position: sticky !important; top: 41px !important; left: auto !important; z-index: 11; }
 
+.ext-start, #perf-table td.ext-start { border-left: 2px solid var(--border) !important; }
+.grp-ext { background: color-mix(in srgb, var(--yellow) 18%, var(--bg2)) !important; color: var(--navy); }
+
 /* ───── AI+Writer Cracked table — freeze S.No + Show Name ───── */
 #aiwc-table th:nth-child(1), #aiwc-table td:nth-child(1) {
   position: sticky !important; left: 0 !important; z-index: 3;
@@ -978,6 +981,7 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
             <th colspan="9" class="grp-blank"></th>
             <th colspan="5" class="grp grp-d7">D7</th>
             <th colspan="5" class="grp grp-d15 d15-start">D15</th>
+            <th colspan="10" class="grp grp-ext ext-start">Extensions - D7</th>
           </tr>
           <tr id="perf-col-row">
             <th>S.No</th>
@@ -999,6 +1003,16 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
             <th data-col="H5_Ret_D15" onclick="sortPerfTable(this)">H5 Ret. D7%</th>
             <th data-col="H10_Ret_D15" onclick="sortPerfTable(this)">H10 Ret. D7%</th>
             <th data-col="H15_Ret_D15" onclick="sortPerfTable(this)">H15 Ret. D7%</th>
+            <th data-col="True_Ldau_Ext" onclick="sortPerfTable(this)" class="ext-start">True LDAU</th>
+            <th data-col="pct_activation_Ext" onclick="sortPerfTable(this)">% Activation</th>
+            <th data-col="H5_Ret_Ext" onclick="sortPerfTable(this)">H5 Ret.</th>
+            <th data-col="H10_Ret_Ext" onclick="sortPerfTable(this)">H10 Ret.</th>
+            <th data-col="H15_Ret_Ext" onclick="sortPerfTable(this)">H15 Ret.</th>
+            <th data-col="H20_Ret_Ext" onclick="sortPerfTable(this)">H20 Ret.</th>
+            <th data-col="H25_Ret_Ext" onclick="sortPerfTable(this)">H25 Ret.</th>
+            <th data-col="H30_Ret_Ext" onclick="sortPerfTable(this)">H30 Ret.</th>
+            <th data-col="H40_Ret_Ext" onclick="sortPerfTable(this)">H40 Ret.</th>
+            <th data-col="H50_Ret_Ext" onclick="sortPerfTable(this)">H50 Ret.</th>
           </tr></thead>
           <tbody id="perf-tbody"></tbody>
         </table>
@@ -1477,6 +1491,8 @@ function renderPerfTable() {
     'Type': '—','Batch': '—','Sub-Genre': '—','Platform': '—','List': '—','Source Name': '—','Clean URL': '',
     'Show Length': 275,'True Ldau': 45481,'pct_activation': 0.5952,'H5_Ret_D7': 19.72,'H10_Ret_D7': 13.26,'H15_Ret_D7': 11.22,
     'True_Ldau_D15': 45703,'pct_activation_D15': 0.6185,'H5_Ret_D15': 21.17,'H10_Ret_D15': 15.62,'H15_Ret_D15': 14.03,
+    'True_Ldau_Ext': null,'pct_activation_Ext': null,'H5_Ret_Ext': null,'H10_Ret_Ext': null,'H15_Ret_Ext': null,
+    'H20_Ret_Ext': null,'H25_Ret_Ext': null,'H30_Ret_Ext': null,'H40_Ret_Ext': null,'H50_Ret_Ext': null,
     '__benchmark': true
   };
   // Prefer the live tiger row extracted from the sheet's above-header rows (public-CSV path).
@@ -1485,7 +1501,9 @@ function renderPerfTable() {
   const tigerRow = PERF_DATA.find(d => /return\s+of\s+tiger/i.test(String(d['show_title']||'')));
   if (tigerRow) {
     ['H5_Ret_D7','H10_Ret_D7','H15_Ret_D7','True Ldau','pct_activation','Show Length',
-     'True_Ldau_D15','pct_activation_D15','H5_Ret_D15','H10_Ret_D15','H15_Ret_D15']
+     'True_Ldau_D15','pct_activation_D15','H5_Ret_D15','H10_Ret_D15','H15_Ret_D15',
+     'True_Ldau_Ext','pct_activation_Ext','H5_Ret_Ext','H10_Ret_Ext','H15_Ret_Ext',
+     'H20_Ret_Ext','H25_Ret_Ext','H30_Ret_Ext','H40_Ret_Ext','H50_Ret_Ext']
       .forEach(k => { if (tigerRow[k] != null && tigerRow[k] !== '') BENCHMARK[k] = tigerRow[k]; });
   }
   let filtered = PERF_DATA.filter(d => {
@@ -1526,6 +1544,17 @@ function renderPerfTable() {
   const maxH5_15  = Math.max(...allRows.map(d=>parseFloat(d['H5_Ret_D15'])||0));
   const maxH10_15 = Math.max(...allRows.map(d=>parseFloat(d['H10_Ret_D15'])||0));
   const maxH15_15 = Math.max(...allRows.map(d=>parseFloat(d['H15_Ret_D15'])||0));
+  // Extensions D7 block maxes
+  const maxLdauExt  = Math.max(...allRows.map(d=>parseFloat(d['True_Ldau_Ext'])||0));
+  const maxActExt   = Math.max(...allRows.map(d=>parseFloat(d['pct_activation_Ext'])||0));
+  const maxH5Ext    = Math.max(...allRows.map(d=>parseFloat(d['H5_Ret_Ext'])||0));
+  const maxH10Ext   = Math.max(...allRows.map(d=>parseFloat(d['H10_Ret_Ext'])||0));
+  const maxH15Ext   = Math.max(...allRows.map(d=>parseFloat(d['H15_Ret_Ext'])||0));
+  const maxH20Ext   = Math.max(...allRows.map(d=>parseFloat(d['H20_Ret_Ext'])||0));
+  const maxH25Ext   = Math.max(...allRows.map(d=>parseFloat(d['H25_Ret_Ext'])||0));
+  const maxH30Ext   = Math.max(...allRows.map(d=>parseFloat(d['H30_Ret_Ext'])||0));
+  const maxH40Ext   = Math.max(...allRows.map(d=>parseFloat(d['H40_Ret_Ext'])||0));
+  const maxH50Ext   = Math.max(...allRows.map(d=>parseFloat(d['H50_Ret_Ext'])||0));
   const tbody = document.getElementById('perf-tbody');
 
   // ── Sync extra (sheet-only) columns into the table header ────────
@@ -1587,6 +1616,46 @@ function renderPerfTable() {
     const h5_15Bar  = h5_15v != null && maxH5_15 ? Math.round(h5_15v/maxH5_15*100) : 0;
     const h10_15Bar = h10_15v != null && maxH10_15 ? Math.round(h10_15v/maxH10_15*100) : 0;
     const h15_15Bar = h15_15v != null && maxH15_15 ? Math.round(h15_15v/maxH15_15*100) : 0;
+    // ── Extensions D7 block values ──
+    const ldauExtv = d['True_Ldau_Ext']      != null && d['True_Ldau_Ext']      !== '' ? parseFloat(d['True_Ldau_Ext'])      : null;
+    const actExtv  = d['pct_activation_Ext'] != null && d['pct_activation_Ext'] !== '' ? parseFloat(d['pct_activation_Ext']) : null;
+    const h5Extv   = d['H5_Ret_Ext']  != null && d['H5_Ret_Ext']  !== '' ? parseFloat(d['H5_Ret_Ext'])  : null;
+    const h10Extv  = d['H10_Ret_Ext'] != null && d['H10_Ret_Ext'] !== '' ? parseFloat(d['H10_Ret_Ext']) : null;
+    const h15Extv  = d['H15_Ret_Ext'] != null && d['H15_Ret_Ext'] !== '' ? parseFloat(d['H15_Ret_Ext']) : null;
+    const h20Extv  = d['H20_Ret_Ext'] != null && d['H20_Ret_Ext'] !== '' ? parseFloat(d['H20_Ret_Ext']) : null;
+    const h25Extv  = d['H25_Ret_Ext'] != null && d['H25_Ret_Ext'] !== '' ? parseFloat(d['H25_Ret_Ext']) : null;
+    const h30Extv  = d['H30_Ret_Ext'] != null && d['H30_Ret_Ext'] !== '' ? parseFloat(d['H30_Ret_Ext']) : null;
+    const h40Extv  = d['H40_Ret_Ext'] != null && d['H40_Ret_Ext'] !== '' ? parseFloat(d['H40_Ret_Ext']) : null;
+    const h50Extv  = d['H50_Ret_Ext'] != null && d['H50_Ret_Ext'] !== '' ? parseFloat(d['H50_Ret_Ext']) : null;
+    const ldauExt  = ldauExtv != null ? Math.round(ldauExtv).toLocaleString() : '—';
+    const actExt   = actExtv  != null ? (actExtv*100).toFixed(1)+'%'           : '—';
+    const h5Ext    = h5Extv   != null ? h5Extv.toFixed(2)   : '—';
+    const h10Ext   = h10Extv  != null ? h10Extv.toFixed(2)  : '—';
+    const h15Ext   = h15Extv  != null ? h15Extv.toFixed(2)  : '—';
+    const h20Ext   = h20Extv  != null ? h20Extv.toFixed(2)  : '—';
+    const h25Ext   = h25Extv  != null ? h25Extv.toFixed(2)  : '—';
+    const h30Ext   = h30Extv  != null ? h30Extv.toFixed(2)  : '—';
+    const h40Ext   = h40Extv  != null ? h40Extv.toFixed(2)  : '—';
+    const h50Ext   = h50Extv  != null ? h50Extv.toFixed(2)  : '—';
+    const ldauExtCls = ldauExtv != null ? perfColor(ldauExtv, maxLdauExt)  : '';
+    const actExtCls  = actExtv  != null ? perfColor(actExtv,  maxActExt)   : '';
+    const h5ExtCls   = h5Extv   != null ? perfColor(h5Extv,   maxH5Ext)   : '';
+    const h10ExtCls  = h10Extv  != null ? perfColor(h10Extv,  maxH10Ext)  : '';
+    const h15ExtCls  = h15Extv  != null ? perfColor(h15Extv,  maxH15Ext)  : '';
+    const h20ExtCls  = h20Extv  != null ? perfColor(h20Extv,  maxH20Ext)  : '';
+    const h25ExtCls  = h25Extv  != null ? perfColor(h25Extv,  maxH25Ext)  : '';
+    const h30ExtCls  = h30Extv  != null ? perfColor(h30Extv,  maxH30Ext)  : '';
+    const h40ExtCls  = h40Extv  != null ? perfColor(h40Extv,  maxH40Ext)  : '';
+    const h50ExtCls  = h50Extv  != null ? perfColor(h50Extv,  maxH50Ext)  : '';
+    const actExtBar  = actExtv  != null && maxActExt  ? Math.round(actExtv /maxActExt *100) : 0;
+    const h5ExtBar   = h5Extv   != null && maxH5Ext   ? Math.round(h5Extv  /maxH5Ext  *100) : 0;
+    const h10ExtBar  = h10Extv  != null && maxH10Ext  ? Math.round(h10Extv /maxH10Ext *100) : 0;
+    const h15ExtBar  = h15Extv  != null && maxH15Ext  ? Math.round(h15Extv /maxH15Ext *100) : 0;
+    const h20ExtBar  = h20Extv  != null && maxH20Ext  ? Math.round(h20Extv /maxH20Ext *100) : 0;
+    const h25ExtBar  = h25Extv  != null && maxH25Ext  ? Math.round(h25Extv /maxH25Ext *100) : 0;
+    const h30ExtBar  = h30Extv  != null && maxH30Ext  ? Math.round(h30Extv /maxH30Ext *100) : 0;
+    const h40ExtBar  = h40Extv  != null && maxH40Ext  ? Math.round(h40Extv /maxH40Ext *100) : 0;
+    const h50ExtBar  = h50Extv  != null && maxH50Ext  ? Math.round(h50Extv /maxH50Ext *100) : 0;
     // show_title is clickable → CMS Link (from perf row, or fall back to looking it up in the catalogue by Show ID)
     let cmsLink = d['CMS Link'] || '';
     if (!cmsLink && d['Show ID']) {
@@ -1653,12 +1722,22 @@ function renderPerfTable() {
       <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h5_15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h5_15Cls}">${h5_15v != null ? h5_15+'%' : '—'}</span></div></td>
       <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h10_15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h10_15Cls}">${h10_15v != null ? h10_15+'%' : '—'}</span></div></td>
       <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h15_15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h15_15Cls}">${h15_15v != null ? h15_15+'%' : '—'}</span></div></td>
+      <td class="ext-start"><span class="metric-cell ${ldauExtCls}">${ldauExt}</span></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${actExtBar}%;background:var(--purple)"></div></div><span class="metric-cell ${actExtCls}">${actExt}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h5ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h5ExtCls}">${h5Extv != null ? h5Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h10ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h10ExtCls}">${h10Extv != null ? h10Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h15ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h15ExtCls}">${h15Extv != null ? h15Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h20ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h20ExtCls}">${h20Extv != null ? h20Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h25ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h25ExtCls}">${h25Extv != null ? h25Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h30ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h30ExtCls}">${h30Extv != null ? h30Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h40ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h40ExtCls}">${h40Extv != null ? h40Ext+'%' : '—'}</span></div></td>
+      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h50ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h50ExtCls}">${h50Extv != null ? h50Ext+'%' : '—'}</span></div></td>
       ${extraCells}
     </tr>`;
   }
   document.getElementById('perf-benchmark-head').innerHTML = buildRow(BENCHMARK, 'BM', true);
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="${19 + extraCols.length}"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${29 + extraCols.length}"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
     syncPerfStickyOffsets();
     return;
   }
@@ -2094,6 +2173,29 @@ function rowsToPerf(header, rows) {
   }
   [d15.ldau, d15.act, d15.h5, d15.h10, d15.h15].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
   PERF_IDX = { type: i.type, batch: i.batch, title: i.title, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15 };
+
+  // ── Extensions D7 block: 3rd occurrence of the same metric names, after D15 ──
+  const d15end = Math.max(d15.ldau, d15.act, d15.h5, d15.h10, d15.h15);
+  let ext = {
+    ldau: nthAfter(d15end, 'True Ldau', 'Ldau', 'True LDAU', 'LDAU'),
+    act:  nthAfter(d15end, '% activation', 'pct_activation', 'activation', 'pct activation', 'percent activation'),
+    h5:   nthAfter(d15end, 'H5_Ret_D7', 'H5 Ret D7', 'H5 Ret. D7%', 'H5 Ret. D7 % (nth Hr)'),
+    h10:  nthAfter(d15end, 'H10_Ret_D7', 'H10 Ret D7', 'H10 Ret. D7%', 'H10 Ret. D7 % (nth Hr)'),
+    h15:  nthAfter(d15end, 'H15_Ret_D7', 'H15 Ret D7', 'H15 Ret. D7%', 'H15 Ret. D7 % (nth Hr)'),
+    h20:  nthAfter(d15end, 'H20_Ret_D7', 'H20 Ret D7', 'H20 Ret. D7%', 'H20 Ret. D7 % (nth Hr)'),
+    h25:  nthAfter(d15end, 'H25_Ret_D7', 'H25 Ret D7', 'H25 Ret. D7%', 'H25 Ret. D7 % (nth Hr)'),
+    h30:  nthAfter(d15end, 'H30_Ret_D7', 'H30 Ret D7', 'H30 Ret. D7%', 'H30 Ret. D7 % (nth Hr)'),
+    h40:  nthAfter(d15end, 'H40_Ret_D7', 'H40 Ret D7', 'H40 Ret. D7%', 'H40 Ret. D7 % (nth Hr)'),
+    h50:  nthAfter(d15end, 'H50_Ret_D7', 'H50 Ret D7', 'H50 Ret. D7%', 'H50 Ret. D7 % (nth Hr)'),
+  };
+  // Positional fallback: grab 10 consecutive columns after the D15 block
+  if ([ext.ldau, ext.act, ext.h5, ext.h10, ext.h15].some(x => x < 0) && d15end >= 0) {
+    let s = d15end + 1;
+    if (s < header.length && normHdr(header[s]) === '') s++;
+    if (s + 9 < header.length) ext = { ldau: s, act: s+1, h5: s+2, h10: s+3, h15: s+4, h20: s+5, h25: s+6, h30: s+7, h40: s+8, h50: s+9 };
+  }
+  [ext.ldau, ext.act, ext.h5, ext.h10, ext.h15, ext.h20, ext.h25, ext.h30, ext.h40, ext.h50].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
+  PERF_IDX = { type: i.type, batch: i.batch, title: i.title, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15, ext };
   Object.values(i).forEach(idx => { if (typeof idx === 'number' && idx >= 0) PERF_KNOWN_IDX.add(idx); });
   return rows.filter(r => (r[i.title]||'').trim() !== '').map(r => {
     const typeVal  = (r[i.type]  || '').trim();
@@ -2120,6 +2222,16 @@ function rowsToPerf(header, rows) {
       'H5_Ret_D15':          toNum(r[d15.h5]),
       'H10_Ret_D15':         toNum(r[d15.h10]),
       'H15_Ret_D15':         toNum(r[d15.h15]),
+      'True_Ldau_Ext':       toNum(r[ext.ldau]),
+      'pct_activation_Ext':  toPct(r[ext.act]),
+      'H5_Ret_Ext':          toNum(r[ext.h5]),
+      'H10_Ret_Ext':         toNum(r[ext.h10]),
+      'H15_Ret_Ext':         toNum(r[ext.h15]),
+      'H20_Ret_Ext':         toNum(r[ext.h20]),
+      'H25_Ret_Ext':         toNum(r[ext.h25]),
+      'H30_Ret_Ext':         toNum(r[ext.h30]),
+      'H40_Ret_Ext':         toNum(r[ext.h40]),
+      'H50_Ret_Ext':         toNum(r[ext.h50]),
     };
     // Preserve extra (unknown) columns under their original sheet name.
     // Auto-parse numbers; fall back to trimmed string.
@@ -2138,7 +2250,7 @@ function rowsToPerf(header, rows) {
 // Uses the column-index map (incl. the D15 block) captured by the last rowsToPerf().
 function extractPerfBenchmark(allRows, headerIdx) {
   if (!PERF_IDX || !Array.isArray(allRows)) return null;
-  const I = PERF_IDX, d = I.d15 || {};
+  const I = PERF_IDX, d = I.d15 || {}, e = I.ext || {};
   for (let r = 0; r < headerIdx; r++) {
     const row = allRows[r] || [];
     const title = String(I.title >= 0 ? (row[I.title] || '') : '');
@@ -2157,6 +2269,16 @@ function extractPerfBenchmark(allRows, headerIdx) {
       'H5_Ret_D15':          toNum(row[d.h5]),
       'H10_Ret_D15':         toNum(row[d.h10]),
       'H15_Ret_D15':         toNum(row[d.h15]),
+      'True_Ldau_Ext':       toNum(row[e.ldau]),
+      'pct_activation_Ext':  toPct(row[e.act]),
+      'H5_Ret_Ext':          toNum(row[e.h5]),
+      'H10_Ret_Ext':         toNum(row[e.h10]),
+      'H15_Ret_Ext':         toNum(row[e.h15]),
+      'H20_Ret_Ext':         toNum(row[e.h20]),
+      'H25_Ret_Ext':         toNum(row[e.h25]),
+      'H30_Ret_Ext':         toNum(row[e.h30]),
+      'H40_Ret_Ext':         toNum(row[e.h40]),
+      'H50_Ret_Ext':         toNum(row[e.h50]),
       '__benchmark': true
     };
   }
