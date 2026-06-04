@@ -1628,25 +1628,25 @@ function renderPerfTable() {
     const h40Extv  = d['H40_Ret_Ext'] != null && d['H40_Ret_Ext'] !== '' ? parseFloat(d['H40_Ret_Ext']) : null;
     const h50Extv  = d['H50_Ret_Ext'] != null && d['H50_Ret_Ext'] !== '' ? parseFloat(d['H50_Ret_Ext']) : null;
     const ldauExt  = ldauExtv != null ? Math.round(ldauExtv).toLocaleString() : '—';
-    const actExt   = actExtv  != null ? (actExtv*100).toFixed(1)+'%'           : '—';
-    const h5Ext    = h5Extv   != null ? h5Extv.toFixed(2)   : '—';
-    const h10Ext   = h10Extv  != null ? h10Extv.toFixed(2)  : '—';
-    const h15Ext   = h15Extv  != null ? h15Extv.toFixed(2)  : '—';
-    const h20Ext   = h20Extv  != null ? h20Extv.toFixed(2)  : '—';
-    const h25Ext   = h25Extv  != null ? h25Extv.toFixed(2)  : '—';
-    const h30Ext   = h30Extv  != null ? h30Extv.toFixed(2)  : '—';
-    const h40Ext   = h40Extv  != null ? h40Extv.toFixed(2)  : '—';
-    const h50Ext   = h50Extv  != null ? h50Extv.toFixed(2)  : '—';
-    const ldauExtCls = ldauExtv != null ? perfColor(ldauExtv, maxLdauExt)  : '';
-    const actExtCls  = actExtv  != null ? perfColor(actExtv,  maxActExt)   : '';
-    const h5ExtCls   = h5Extv   != null ? perfColor(h5Extv,   maxH5Ext)   : '';
-    const h10ExtCls  = h10Extv  != null ? perfColor(h10Extv,  maxH10Ext)  : '';
-    const h15ExtCls  = h15Extv  != null ? perfColor(h15Extv,  maxH15Ext)  : '';
-    const h20ExtCls  = h20Extv  != null ? perfColor(h20Extv,  maxH20Ext)  : '';
-    const h25ExtCls  = h25Extv  != null ? perfColor(h25Extv,  maxH25Ext)  : '';
-    const h30ExtCls  = h30Extv  != null ? perfColor(h30Extv,  maxH30Ext)  : '';
-    const h40ExtCls  = h40Extv  != null ? perfColor(h40Extv,  maxH40Ext)  : '';
-    const h50ExtCls  = h50Extv  != null ? perfColor(h50Extv,  maxH50Ext)  : '';
+    const actExt   = actExtv  != null ? (actExtv*100).toFixed(1)+'%' : '—';
+    const h5Ext    = h5Extv   != null ? h5Extv.toFixed(2)  : '—';
+    const h10Ext   = h10Extv  != null ? h10Extv.toFixed(2) : '—';
+    const h15Ext   = h15Extv  != null ? h15Extv.toFixed(2) : '—';
+    const h20Ext   = h20Extv  != null ? h20Extv.toFixed(2) : '—';
+    const h25Ext   = h25Extv  != null ? h25Extv.toFixed(2) : '—';
+    const h30Ext   = h30Extv  != null ? h30Extv.toFixed(2) : '—';
+    const h40Ext   = h40Extv  != null ? h40Extv.toFixed(2) : '—';
+    const h50Ext   = h50Extv  != null ? h50Extv.toFixed(2) : '—';
+    const ldauExtCls = ldauExtv != null ? perfColor(ldauExtv, maxLdauExt) : '';
+    const actExtCls  = actExtv  != null ? perfColor(actExtv,  maxActExt)  : '';
+    const h5ExtCls   = h5Extv   != null ? perfColor(h5Extv,   maxH5Ext)  : '';
+    const h10ExtCls  = h10Extv  != null ? perfColor(h10Extv,  maxH10Ext) : '';
+    const h15ExtCls  = h15Extv  != null ? perfColor(h15Extv,  maxH15Ext) : '';
+    const h20ExtCls  = h20Extv  != null ? perfColor(h20Extv,  maxH20Ext) : '';
+    const h25ExtCls  = h25Extv  != null ? perfColor(h25Extv,  maxH25Ext) : '';
+    const h30ExtCls  = h30Extv  != null ? perfColor(h30Extv,  maxH30Ext) : '';
+    const h40ExtCls  = h40Extv  != null ? perfColor(h40Extv,  maxH40Ext) : '';
+    const h50ExtCls  = h50Extv  != null ? perfColor(h50Extv,  maxH50Ext) : '';
     const actExtBar  = actExtv  != null && maxActExt  ? Math.round(actExtv /maxActExt *100) : 0;
     const h5ExtBar   = h5Extv   != null && maxH5Ext   ? Math.round(h5Extv  /maxH5Ext  *100) : 0;
     const h10ExtBar  = h10Extv  != null && maxH10Ext  ? Math.round(h10Extv /maxH10Ext *100) : 0;
@@ -2174,25 +2174,26 @@ function rowsToPerf(header, rows) {
   [d15.ldau, d15.act, d15.h5, d15.h10, d15.h15].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
   PERF_IDX = { type: i.type, batch: i.batch, title: i.title, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15 };
 
-  // ── Extensions D7 block: 3rd occurrence of the same metric names, after D15 ──
+  // ── Extensions D7 block: all 10 cols are duplicate header names after D15 ──
+  // Use nthAfter from d15end so we skip the D7 and D15 occurrences.
   const d15end = Math.max(d15.ldau, d15.act, d15.h5, d15.h10, d15.h15);
   let ext = {
     ldau: nthAfter(d15end, 'True Ldau', 'Ldau', 'True LDAU', 'LDAU'),
     act:  nthAfter(d15end, '% activation', 'pct_activation', 'activation', 'pct activation', 'percent activation'),
-    h5:   nthAfter(d15end, 'H5_Ret_D7', 'H5 Ret D7', 'H5 Ret. D7%', 'H5 Ret. D7 % (nth Hr)'),
-    h10:  nthAfter(d15end, 'H10_Ret_D7', 'H10 Ret D7', 'H10 Ret. D7%', 'H10 Ret. D7 % (nth Hr)'),
-    h15:  nthAfter(d15end, 'H15_Ret_D7', 'H15 Ret D7', 'H15 Ret. D7%', 'H15 Ret. D7 % (nth Hr)'),
-    h20:  nthAfter(d15end, 'H20_Ret_D7', 'H20 Ret D7', 'H20 Ret. D7%', 'H20 Ret. D7 % (nth Hr)'),
-    h25:  nthAfter(d15end, 'H25_Ret_D7', 'H25 Ret D7', 'H25 Ret. D7%', 'H25 Ret. D7 % (nth Hr)'),
-    h30:  nthAfter(d15end, 'H30_Ret_D7', 'H30 Ret D7', 'H30 Ret. D7%', 'H30 Ret. D7 % (nth Hr)'),
-    h40:  nthAfter(d15end, 'H40_Ret_D7', 'H40 Ret D7', 'H40 Ret. D7%', 'H40 Ret. D7 % (nth Hr)'),
-    h50:  nthAfter(d15end, 'H50_Ret_D7', 'H50 Ret D7', 'H50 Ret. D7%', 'H50 Ret. D7 % (nth Hr)'),
+    h5:   nthAfter(d15end, 'H5_Ret_D7', 'H5 Ret D7', 'H5 Ret. D7%', 'H5 Ret. D7 % (nth Hr)', 'H5 Ret. D7% (nth Hr)'),
+    h10:  nthAfter(d15end, 'H10_Ret_D7', 'H10 Ret D7', 'H10 Ret. D7%', 'H10 Ret. D7 % (nth Hr)', 'H10 Ret. D7% (nth Hr)'),
+    h15:  nthAfter(d15end, 'H15_Ret_D7', 'H15 Ret D7', 'H15 Ret. D7%', 'H15 Ret. D7 % (nth Hr)', 'H15 Ret. D7% (nth Hr)'),
+    h20:  nthAfter(d15end, 'H20_Ret_D7', 'H20 Ret D7', 'H20 Ret. D7%', 'H20 Ret. D7 % (nth Hr)', 'H20 Ret. D7% (nth Hr)'),
+    h25:  nthAfter(d15end, 'H25_Ret_D7', 'H25 Ret D7', 'H25 Ret. D7%', 'H25 Ret. D7 % (nth Hr)', 'H25 Ret. D7% (nth Hr)'),
+    h30:  nthAfter(d15end, 'H30_Ret_D7', 'H30 Ret D7', 'H30 Ret. D7%', 'H30 Ret. D7 % (nth Hr)', 'H30 Ret. D7% (nth Hr)'),
+    h40:  nthAfter(d15end, 'H40_Ret_D7', 'H40 Ret D7', 'H40 Ret. D7%', 'H40 Ret. D7 % (nth Hr)', 'H40 Ret. D7% (nth Hr)'),
+    h50:  nthAfter(d15end, 'H50_Ret_D7', 'H50 Ret D7', 'H50 Ret. D7%', 'H50 Ret. D7 % (nth Hr)', 'H50 Ret. D7% (nth Hr)'),
   };
-  // Positional fallback: grab 10 consecutive columns after the D15 block
-  if ([ext.ldau, ext.act, ext.h5, ext.h10, ext.h15].some(x => x < 0) && d15end >= 0) {
+  // Positional fallback: grab 10 consecutive columns right after D15 block
+  if ([ext.ldau, ext.act, ext.h5].some(x => x < 0) && d15end >= 0) {
     let s = d15end + 1;
     if (s < header.length && normHdr(header[s]) === '') s++;
-    if (s + 9 < header.length) ext = { ldau: s, act: s+1, h5: s+2, h10: s+3, h15: s+4, h20: s+5, h25: s+6, h30: s+7, h40: s+8, h50: s+9 };
+    if (s + 9 <= header.length) ext = { ldau: s, act: s+1, h5: s+2, h10: s+3, h15: s+4, h20: s+5, h25: s+6, h30: s+7, h40: s+8, h50: s+9 };
   }
   [ext.ldau, ext.act, ext.h5, ext.h10, ext.h15, ext.h20, ext.h25, ext.h30, ext.h40, ext.h50].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
   PERF_IDX = { type: i.type, batch: i.batch, title: i.title, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15, ext };
