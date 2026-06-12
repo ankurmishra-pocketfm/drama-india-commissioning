@@ -808,6 +808,59 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
 #aiwc-table thead:last-child th:nth-child(1) { position: sticky !important; left: 0    !important; top: 41px !important; z-index: 13; }
 #aiwc-table thead:last-child th:nth-child(2) { position: sticky !important; left: 44px !important; top: 41px !important; z-index: 13; border-right: 2px solid var(--border) !important; }
 
+/* ─── Multi-Select Filter Widget ─── */
+.ms-wrap { position: relative; display: inline-block; }
+.ms-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 6px 28px 6px 11px;
+  border-radius: 5px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 130px;
+  text-align: left;
+  white-space: nowrap;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%239b9488' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  transition: border-color 0.18s, color 0.18s;
+  outline: none;
+}
+.ms-btn:hover, .ms-btn.has-sel { border-color: var(--teal); color: var(--teal); }
+.ms-btn.has-sel { font-weight: 600; }
+.ms-dd {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  z-index: 300;
+  min-width: 170px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.ms-dd.open { display: block; }
+.ms-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  user-select: none;
+}
+.ms-opt:hover { background: var(--bg2); }
+.ms-opt input[type=checkbox] { cursor: pointer; accent-color: var(--teal); flex-shrink: 0; }
+.ms-empty { padding: 8px 12px; font-size: 12px; color: var(--text4); font-style: italic; }
+
 </style>
 </head>
 <body>
@@ -953,10 +1006,11 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
 <div id="page-perf" class="page">
   <div class="filter-bar">
     <span class="filter-label">Filter</span>
-    <select class="filter-select" id="perf-f-type" onchange="renderPerfTable()"><option value="">All Types</option></select>
-    <select class="filter-select" id="perf-f-batch" onchange="renderPerfTable()"><option value="">All Batches</option></select>
-    <select class="filter-select" id="perf-f-platform" onchange="renderPerfTable()"><option value="">All Platforms</option></select>
-    <select class="filter-select" id="perf-f-list" onchange="renderPerfTable()"><option value="">All Lists</option></select>
+    <div class="ms-wrap" id="perf-f-type" data-placeholder="All Types"></div>
+    <div class="ms-wrap" id="perf-f-batch" data-placeholder="All Batches"></div>
+    <div class="ms-wrap" id="perf-f-platform" data-placeholder="All Platforms"></div>
+    <div class="ms-wrap" id="perf-f-list" data-placeholder="All Lists"></div>
+    <div class="ms-wrap" id="perf-f-ext" data-placeholder="All Extensions"></div>
     <input class="search-input" type="text" id="perf-search" placeholder="Search shows, sub-genres…" oninput="renderPerfTable()">
     <button class="reset-btn" onclick="resetPerf()">✕ Reset</button>
     <span class="filter-result-count" id="perf-filter-count">— shows</span>
@@ -973,7 +1027,7 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
           <thead id="perf-benchmark-head"></thead>
           <thead id="perf-cols-head">
           <tr class="perf-grp">
-            <th colspan="9" class="grp-blank"></th>
+            <th colspan="10" class="grp-blank"></th>
             <th colspan="5" class="grp grp-d7">D7</th>
             <th colspan="5" class="grp grp-d15 d15-start">D15</th>
             <th colspan="10" class="grp grp-ext ext-start">Extensions - D15</th>
@@ -987,6 +1041,7 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
             <th data-col="Sub-Genre" onclick="sortPerfTable(this)">Sub-Genre</th>
             <th data-col="Platform" onclick="sortPerfTable(this)">Platform</th>
             <th data-col="List" onclick="sortPerfTable(this)">List</th>
+            <th data-col="Extensions" onclick="sortPerfTable(this)">Extensions</th>
             <th data-col="Show Length" onclick="sortPerfTable(this)">Length</th>
             <th data-col="True Ldau" onclick="sortPerfTable(this)">True LDAU</th>
             <th data-col="pct_activation" onclick="sortPerfTable(this)">% Activation</th>
@@ -1441,22 +1496,19 @@ function renderAllTable() {
   document.getElementById('all-tbody').innerHTML = buildRows(filtered, 'all');
 }
 
+var MS = {};
 function buildPerfFilters() {
   const vals = {
     'perf-f-type':     [...new Set(PERF_DATA.map(d=>d['Type']))].filter(Boolean).sort(),
     'perf-f-batch':    [...new Set(PERF_DATA.map(d=>d['Batch']))].filter(Boolean).sort(),
     'perf-f-platform': [...new Set(PERF_DATA.map(d=>d['Platform']))].filter(Boolean).sort(),
     'perf-f-list':     [...new Set(PERF_DATA.map(d=>d['List']))].filter(Boolean).sort(),
+    'perf-f-ext':      [...new Set(PERF_DATA.map(d=>d['Extensions']))].filter(Boolean).sort(),
   };
-  for (const [id, opts] of Object.entries(vals)) {
-    const sel = document.getElementById(id);
-    if (!sel) continue;
-    while (sel.options.length > 1) sel.remove(1);
-    opts.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
-  }
+  for (const [id, opts] of Object.entries(vals)) buildMs(id, opts);
 }
 function resetPerf() {
-  ['perf-f-type','perf-f-batch','perf-f-platform','perf-f-list'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['perf-f-type','perf-f-batch','perf-f-platform','perf-f-list','perf-f-ext'].forEach(id => clearMs(id));
   document.getElementById('perf-search').value = ''; renderPerfTable();
 }
 function sortPerfTable(th) {
@@ -1475,10 +1527,11 @@ function perfColor(val, max) {
   return 'metric-lo';
 }
 function renderPerfTable() {
-  const typeFil  = (document.getElementById('perf-f-type')  || {}).value || '';
-  const batchFil = (document.getElementById('perf-f-batch') || {}).value || '';
-  const platform = document.getElementById('perf-f-platform').value;
-  const list = document.getElementById('perf-f-list').value;
+  const typeFil  = getMs('perf-f-type');
+  const batchFil = getMs('perf-f-batch');
+  const platform = getMs('perf-f-platform');
+  const list     = getMs('perf-f-list');
+  const extFil   = getMs('perf-f-ext');
   const search = document.getElementById('perf-search').value.toLowerCase();
   // Benchmark "The Return of Tiger" — D7 + D15 values pulled from the sheet's header row.
   const BENCHMARK = {
@@ -1502,10 +1555,11 @@ function renderPerfTable() {
       .forEach(k => { if (tigerRow[k] != null && tigerRow[k] !== '') BENCHMARK[k] = tigerRow[k]; });
   }
   let filtered = PERF_DATA.filter(d => {
-    if (typeFil  && d['Type']  !== typeFil)  return false;
-    if (batchFil && d['Batch'] !== batchFil) return false;
-    if (platform && d['Platform'] !== platform) return false;
-    if (list && d['List'] !== list) return false;
+    if (typeFil.length  && !typeFil.includes(d['Type']))      return false;
+    if (batchFil.length && !batchFil.includes(d['Batch']))    return false;
+    if (platform.length && !platform.includes(d['Platform'])) return false;
+    if (list.length     && !list.includes(d['List']))         return false;
+    if (extFil.length   && !extFil.includes(d['Extensions'])) return false;
     if (search && !JSON.stringify(d).toLowerCase().includes(search)) return false;
     return true;
   });
@@ -1573,25 +1627,20 @@ function renderPerfTable() {
   if (PERF_HEADER.length && PERF_IDX && colRow) {
     const I = PERF_IDX;
     const knownMap = [
-      [2,  I.type],  [3,  I.batch], [4,  I.title],
-      [5,  I.source],[6,  I.sub],   [7,  I.plat],
-      [8,  I.list],  [9,  I.len],   [10, I.ldau],
-      [11, I.act],   [12, I.h5],    [13, I.h10],
-      [14, I.h15],
-      [15, I.d15 ? I.d15.ldau : -1], [16, I.d15 ? I.d15.act  : -1],
-      [17, I.d15 ? I.d15.h5   : -1], [18, I.d15 ? I.d15.h10  : -1],
-      [19, I.d15 ? I.d15.h15  : -1],
-      [20, I.ext ? I.ext.ldau  : -1], [21, I.ext ? I.ext.act   : -1],
-      [22, I.ext ? I.ext.h5    : -1], [23, I.ext ? I.ext.h10   : -1],
-      [24, I.ext ? I.ext.h15   : -1], [25, I.ext ? I.ext.h20   : -1],
-      [26, I.ext ? I.ext.h25   : -1], [27, I.ext ? I.ext.h30   : -1],
-      [28, I.ext ? I.ext.h40   : -1], [29, I.ext ? I.ext.h50   : -1],
+      [2,I.type],[3,I.batch],[4,I.title],[5,I.source],[6,I.sub],[7,I.plat],
+      [8,I.list],[9,I.ext_info],[10,I.len],[11,I.ldau],[12,I.act],
+      [13,I.h5],[14,I.h10],[15,I.h15],
+      [16,I.d15?I.d15.ldau:-1],[17,I.d15?I.d15.act:-1],[18,I.d15?I.d15.h5:-1],
+      [19,I.d15?I.d15.h10:-1],[20,I.d15?I.d15.h15:-1],
+      [21,I.ext?I.ext.ldau:-1],[22,I.ext?I.ext.act:-1],[23,I.ext?I.ext.h5:-1],
+      [24,I.ext?I.ext.h10:-1],[25,I.ext?I.ext.h15:-1],[26,I.ext?I.ext.h20:-1],
+      [27,I.ext?I.ext.h25:-1],[28,I.ext?I.ext.h30:-1],[29,I.ext?I.ext.h40:-1],
+      [30,I.ext?I.ext.h50:-1],
     ];
     const ths = Array.from(colRow.querySelectorAll('th:not([data-extra="1"])'));
-    knownMap.forEach(([pos, hdrIdx]) => {
-      const th = ths[pos - 1];
-      if (!th) return;
-      const name = (hdrIdx >= 0 && PERF_HEADER[hdrIdx]) ? String(PERF_HEADER[hdrIdx]).trim() : '';
+    knownMap.forEach(([pos,hdrIdx]) => {
+      const th = ths[pos-1]; if (!th) return;
+      const name = (hdrIdx>=0 && PERF_HEADER[hdrIdx]) ? String(PERF_HEADER[hdrIdx]).trim() : '';
       if (name) th.textContent = name;
     });
   }
@@ -1749,6 +1798,7 @@ function renderPerfTable() {
       <td>${subCell}</td>
       <td>${platCell}</td>
       <td>${listCell}</td>
+      <td>${isBenchmark ? '<span style="color:var(--text4)">&#8212;</span>' : esc(d['Extensions']||'&#8212;')}</td>
       <td>${len}</td>
       <td><span class="metric-cell ${ldauCls}">${ldau}</span></td>
       <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${actBar}%;background:var(--purple)"></div></div><span class="metric-cell ${actCls}">${act}</span></div></td>
@@ -1775,7 +1825,7 @@ function renderPerfTable() {
   }
   document.getElementById('perf-benchmark-head').innerHTML = buildRow(BENCHMARK, 'BM', true);
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="${29 + extraCols.length}"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${30 + extraCols.length}"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
     syncPerfStickyOffsets();
     return;
   }
@@ -2171,6 +2221,7 @@ function rowsToPerf(header, rows) {
     h5:     findCol(header, 'H5_Ret_D7', 'H5 Ret D7', 'H5 Ret D7%', 'H5 Ret. D7%', 'H5 Retention D7'),
     h10:    findCol(header, 'H10_Ret_D7', 'H10 Ret D7', 'H10 Ret D7%', 'H10 Ret. D7%', 'H10 Retention D7'),
     h15:    findCol(header, 'H15_Ret_D7', 'H15 Ret D7', 'H15 Ret D7%', 'H15 Ret. D7%', 'H15 Ret. D7 % (nth Hr)', 'H15 Ret. D7 %', 'H15 Retention D7', 'H15'),
+    ext_info: findCol(header, 'Extensions', 'Extension'),
     // Also claim any duplicate Batch column so it doesn't render as an "extra"
     batchAlt: -1,
   };
@@ -2212,7 +2263,7 @@ function rowsToPerf(header, rows) {
   console.log('[Dashboard] blockStart=col', blockStart, '| D15 ldau=col', d15.ldau, '| Ext ldau=col', ext.ldau, '| Ext h50=col', ext.h50);
   [d15.ldau, d15.act, d15.h5, d15.h10, d15.h15].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
   [ext.ldau, ext.act, ext.h5, ext.h10, ext.h15, ext.h20, ext.h25, ext.h30, ext.h40, ext.h50].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
-  PERF_IDX = { type: i.type, batch: i.batch, title: i.title, source: i.source, clean: i.clean, plat: i.plat, list: i.list, sub: i.sub, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15, ext };
+  PERF_IDX = { type: i.type, batch: i.batch, title: i.title, source: i.source, clean: i.clean, plat: i.plat, list: i.list, ext_info: i.ext_info, sub: i.sub, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15, ext };
   Object.values(i).forEach(idx => { if (typeof idx === 'number' && idx >= 0) PERF_KNOWN_IDX.add(idx); });
   return rows.filter(r => (r[i.title]||'').trim() !== '').map(r => {
     const typeVal  = (r[i.type]  || '').trim();
@@ -2227,6 +2278,7 @@ function rowsToPerf(header, rows) {
       'Clean URL':       (r[i.clean]||'').trim(),
       'Platform':        (r[i.plat]||'').trim(),
       'List':            (r[i.list]||'').trim(),
+      'Extensions':      (r[i.ext_info]||'').trim(),
       'Sub-Genre':       (r[i.sub]||'').trim(),
       'Show Length':     toNum(r[i.len]),
       'True Ldau':       toNum(r[i.ldau]),
@@ -2548,6 +2600,73 @@ setInterval(refreshFromSheet, 5000);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) refreshFromSheet();
 });
+// ─── Multi-Select Widget ─────────────────────────────────────────
+function buildMs(id, options) {
+  var wrap = document.getElementById(id);
+  if (!wrap) return;
+  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
+  if (!MS[id]) MS[id] = {};
+  var state = MS[id];
+  // Remove stale selections
+  Object.keys(state).forEach(function(v) { if (options.indexOf(v) < 0) delete state[v]; });
+  var count = Object.keys(state).length;
+  var label = count === 0 ? placeholder : count === 1 ? Object.keys(state)[0] : count + ' selected';
+  var hasSel = count > 0;
+  var html = '<button class="ms-btn' + (hasSel ? ' has-sel' : '') + '" onclick="toggleMsDd(\'' + id + '\');event.stopPropagation()">' +
+    '<span class="ms-lbl">' + esc(label) + '</span></button>' +
+    '<div class="ms-dd" id="' + id + '-dd">';
+  if (options.length === 0) {
+    html += '<div class="ms-empty">No options</div>';
+  } else {
+    options.forEach(function(v) {
+      var sv = String(v);
+      html += '<label class="ms-opt"><input type="checkbox" value="' + esc(sv) + '"' +
+        (state[sv] ? ' checked' : '') + ' onchange="toggleMsVal(\'' + id + '\',this.value)">' +
+        esc(sv) + '</label>';
+    });
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+function toggleMsDd(id) {
+  var dd = document.getElementById(id + '-dd');
+  if (!dd) return;
+  var isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.ms-dd.open').forEach(function(d) { d.classList.remove('open'); });
+  if (!isOpen) dd.classList.add('open');
+}
+function toggleMsVal(id, val) {
+  if (!MS[id]) MS[id] = {};
+  var state = MS[id];
+  if (state[val]) { delete state[val]; } else { state[val] = true; }
+  var wrap = document.getElementById(id);
+  if (wrap) {
+    var placeholder = wrap.getAttribute('data-placeholder') || 'All';
+    var count = Object.keys(state).length;
+    var text = count === 0 ? placeholder : count === 1 ? Object.keys(state)[0] : count + ' selected';
+    var lbl = wrap.querySelector('.ms-lbl');
+    var btn = wrap.querySelector('.ms-btn');
+    if (lbl) lbl.textContent = text;
+    if (btn) { if (count > 0) btn.classList.add('has-sel'); else btn.classList.remove('has-sel'); }
+  }
+  renderPerfTable();
+}
+function getMs(id) { return MS[id] ? Object.keys(MS[id]) : []; }
+function clearMs(id) {
+  MS[id] = {};
+  var wrap = document.getElementById(id);
+  if (!wrap) return;
+  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
+  var lbl = wrap.querySelector('.ms-lbl');
+  var btn = wrap.querySelector('.ms-btn');
+  if (lbl) lbl.textContent = placeholder;
+  if (btn) btn.classList.remove('has-sel');
+  wrap.querySelectorAll('input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+}
+document.addEventListener('click', function() {
+  document.querySelectorAll('.ms-dd.open').forEach(function(d) { d.classList.remove('open'); });
+});
+
 </script>
 </body>
 </html>
