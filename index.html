@@ -841,7 +841,7 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
   box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   z-index: 300;
   min-width: 170px;
-  max-height: 220px;
+  max-height: 240px;
   overflow-y: auto;
   padding: 4px 0;
 }
@@ -859,6 +859,7 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
 }
 .ms-opt:hover { background: var(--bg2); }
 .ms-opt input[type=checkbox] { cursor: pointer; accent-color: var(--teal); flex-shrink: 0; }
+.ms-opt-all { border-bottom: 1px solid var(--border2); margin-bottom: 2px; font-weight: 600; color: var(--text); }
 .ms-empty { padding: 8px 12px; font-size: 12px; color: var(--text4); font-style: italic; }
 
 </style>
@@ -1496,19 +1497,112 @@ function renderAllTable() {
   document.getElementById('all-tbody').innerHTML = buildRows(filtered, 'all');
 }
 
+
+// ─── Multi-Select Widget ─────────────────────────────────────────
 var MS = {};
+function buildMs(id, options) {
+  var wrap = document.getElementById(id);
+  if (!wrap) return;
+  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
+  if (!MS[id]) MS[id] = {};
+  var state = MS[id];
+  // Remove stale selections
+  Object.keys(state).forEach(function(v) { if (options.indexOf(v) < 0) delete state[v]; });
+  var count = Object.keys(state).length;
+  var allSelected = count === options.length && options.length > 0;
+  var label = count === 0 ? placeholder : allSelected ? 'All selected' : count === 1 ? Object.keys(state)[0] : count + ' selected';
+  var hasSel = count > 0;
+  var html = '<button class="ms-btn' + (hasSel ? ' has-sel' : '') + '" onclick="toggleMsDd(\'' + id + '\');event.stopPropagation()">' +
+    '<span class="ms-lbl">' + esc(label) + '</span></button>' +
+    '<div class="ms-dd" id="' + id + '-dd">';
+  if (options.length === 0) {
+    html += '<div class="ms-empty">No options</div>';
+  } else {
+    html += '<label class="ms-opt ms-opt-all"><input type="checkbox"' + (allSelected ? ' checked' : '') +
+      ' onchange="selectAllMs(\'' + id + '\',this.checked,this)">Select all</label>';
+    options.forEach(function(v) {
+      var sv = String(v);
+      html += '<label class="ms-opt"><input type="checkbox" value="' + esc(sv) + '"' +
+        (state[sv] ? ' checked' : '') + ' onchange="toggleMsVal(\'' + id + '\',this.value)">' + esc(sv) + '</label>';
+    });
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+  wrap._msOptions = options;
+}
+function selectAllMs(id, checked, cb) {
+  if (!MS[id]) MS[id] = {};
+  var wrap = document.getElementById(id);
+  var options = wrap ? (wrap._msOptions || []) : [];
+  if (checked) {
+    options.forEach(function(v) { MS[id][String(v)] = true; });
+    wrap.querySelectorAll('.ms-opt:not(.ms-opt-all) input[type=checkbox]').forEach(function(c){ c.checked = true; });
+  } else {
+    MS[id] = {};
+    wrap.querySelectorAll('.ms-opt input[type=checkbox]').forEach(function(c){ c.checked = false; });
+  }
+  updateMsLabel(id, options);
+  renderPerfTable();
+}
+function toggleMsDd(id) {
+  var dd = document.getElementById(id + '-dd');
+  if (!dd) return;
+  var isOpen = dd.classList.contains('open');
+  document.querySelectorAll('.ms-dd.open').forEach(function(d) { d.classList.remove('open'); });
+  if (!isOpen) dd.classList.add('open');
+}
+function toggleMsVal(id, val) {
+  if (!MS[id]) MS[id] = {};
+  var state = MS[id];
+  if (state[val]) { delete state[val]; } else { state[val] = true; }
+  var wrap = document.getElementById(id);
+  var options = wrap ? (wrap._msOptions || []) : [];
+  // Sync select-all checkbox
+  var allCb = wrap ? wrap.querySelector('.ms-opt-all input') : null;
+  if (allCb) allCb.checked = Object.keys(state).length === options.length && options.length > 0;
+  updateMsLabel(id, options);
+  renderPerfTable();
+}
+function updateMsLabel(id, options) {
+  var state = MS[id] || {};
+  var count = Object.keys(state).length;
+  var allSelected = count === options.length && options.length > 0;
+  var wrap = document.getElementById(id);
+  if (!wrap) return;
+  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
+  var text = count === 0 ? placeholder : allSelected ? 'All selected' : count === 1 ? Object.keys(state)[0] : count + ' selected';
+  var lbl = wrap.querySelector('.ms-lbl');
+  var btn = wrap.querySelector('.ms-btn');
+  if (lbl) lbl.textContent = text;
+  if (btn) { if (count > 0) btn.classList.add('has-sel'); else btn.classList.remove('has-sel'); }
+}
+function getMs(id) { return MS[id] ? Object.keys(MS[id]) : []; }
+function clearMs(id) {
+  MS[id] = {};
+  var wrap = document.getElementById(id);
+  if (!wrap) return;
+  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
+  var lbl = wrap.querySelector('.ms-lbl');
+  var btn = wrap.querySelector('.ms-btn');
+  if (lbl) lbl.textContent = placeholder;
+  if (btn) btn.classList.remove('has-sel');
+  wrap.querySelectorAll('input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+}
+document.addEventListener('click', function() {
+  document.querySelectorAll('.ms-dd.open').forEach(function(d) { d.classList.remove('open'); });
+});
 function buildPerfFilters() {
-  const vals = {
+  var vals = {
     'perf-f-type':     [...new Set(PERF_DATA.map(d=>d['Type']))].filter(Boolean).sort(),
     'perf-f-batch':    [...new Set(PERF_DATA.map(d=>d['Batch']))].filter(Boolean).sort(),
     'perf-f-platform': [...new Set(PERF_DATA.map(d=>d['Platform']))].filter(Boolean).sort(),
     'perf-f-list':     [...new Set(PERF_DATA.map(d=>d['List']))].filter(Boolean).sort(),
     'perf-f-ext':      [...new Set(PERF_DATA.map(d=>d['Extensions']))].filter(Boolean).sort(),
   };
-  for (const [id, opts] of Object.entries(vals)) buildMs(id, opts);
+  for (var id in vals) buildMs(id, vals[id]);
 }
 function resetPerf() {
-  ['perf-f-type','perf-f-batch','perf-f-platform','perf-f-list','perf-f-ext'].forEach(id => clearMs(id));
+  ['perf-f-type','perf-f-batch','perf-f-platform','perf-f-list','perf-f-ext'].forEach(function(id){ clearMs(id); });
   document.getElementById('perf-search').value = ''; renderPerfTable();
 }
 function sortPerfTable(th) {
@@ -1527,11 +1621,11 @@ function perfColor(val, max) {
   return 'metric-lo';
 }
 function renderPerfTable() {
-  const typeFil  = getMs('perf-f-type');
-  const batchFil = getMs('perf-f-batch');
-  const platform = getMs('perf-f-platform');
-  const list     = getMs('perf-f-list');
-  const extFil   = getMs('perf-f-ext');
+  var typeFil  = getMs('perf-f-type');
+  var batchFil = getMs('perf-f-batch');
+  var platform = getMs('perf-f-platform');
+  var list     = getMs('perf-f-list');
+  var extFil   = getMs('perf-f-ext');
   const search = document.getElementById('perf-search').value.toLowerCase();
   // Benchmark "The Return of Tiger" — D7 + D15 values pulled from the sheet's header row.
   const BENCHMARK = {
@@ -1554,13 +1648,13 @@ function renderPerfTable() {
      'H20_Ret_Ext','H25_Ret_Ext','H30_Ret_Ext','H40_Ret_Ext','H50_Ret_Ext']
       .forEach(k => { if (tigerRow[k] != null && tigerRow[k] !== '') BENCHMARK[k] = tigerRow[k]; });
   }
-  let filtered = PERF_DATA.filter(d => {
-    if (typeFil.length  && !typeFil.includes(d['Type']))      return false;
-    if (batchFil.length && !batchFil.includes(d['Batch']))    return false;
-    if (platform.length && !platform.includes(d['Platform'])) return false;
-    if (list.length     && !list.includes(d['List']))         return false;
-    if (extFil.length   && !extFil.includes(d['Extensions'])) return false;
-    if (search && !JSON.stringify(d).toLowerCase().includes(search)) return false;
+  var filtered = PERF_DATA.filter(function(d) {
+    if (typeFil.length  && typeFil.indexOf(d['Type'])     < 0) return false;
+    if (batchFil.length && batchFil.indexOf(d['Batch'])   < 0) return false;
+    if (platform.length && platform.indexOf(d['Platform'])< 0) return false;
+    if (list.length     && list.indexOf(d['List'])        < 0) return false;
+    if (extFil.length   && extFil.indexOf(d['Extensions'])< 0) return false;
+    if (search && JSON.stringify(d).toLowerCase().indexOf(search) < 0) return false;
     return true;
   });
   filtered = [...filtered].sort((a, b) => {
@@ -1625,8 +1719,8 @@ function renderPerfTable() {
   }
   // ── Sync known column display names from the live sheet header ─────
   if (PERF_HEADER.length && PERF_IDX && colRow) {
-    const I = PERF_IDX;
-    const knownMap = [
+    var I = PERF_IDX;
+    var knownMap = [
       [2,I.type],[3,I.batch],[4,I.title],[5,I.source],[6,I.sub],[7,I.plat],
       [8,I.list],[9,I.ext_info],[10,I.len],[11,I.ldau],[12,I.act],
       [13,I.h5],[14,I.h10],[15,I.h15],
@@ -1637,10 +1731,11 @@ function renderPerfTable() {
       [27,I.ext?I.ext.h25:-1],[28,I.ext?I.ext.h30:-1],[29,I.ext?I.ext.h40:-1],
       [30,I.ext?I.ext.h50:-1],
     ];
-    const ths = Array.from(colRow.querySelectorAll('th:not([data-extra="1"])'));
-    knownMap.forEach(([pos,hdrIdx]) => {
-      const th = ths[pos-1]; if (!th) return;
-      const name = (hdrIdx>=0 && PERF_HEADER[hdrIdx]) ? String(PERF_HEADER[hdrIdx]).trim() : '';
+    var ths = Array.from(colRow.querySelectorAll('th:not([data-extra="1"])'));
+    knownMap.forEach(function(pair){
+      var pos=pair[0], hdrIdx=pair[1];
+      var th = ths[pos-1]; if (!th) return;
+      var name = (hdrIdx>=0 && PERF_HEADER[hdrIdx]) ? String(PERF_HEADER[hdrIdx]).trim() : '';
       if (name) th.textContent = name;
     });
   }
@@ -1798,7 +1893,7 @@ function renderPerfTable() {
       <td>${subCell}</td>
       <td>${platCell}</td>
       <td>${listCell}</td>
-      <td>${isBenchmark ? '<span style="color:var(--text4)">&#8212;</span>' : esc(d['Extensions']||'&#8212;')}</td>
+      <td>${isBenchmark ? '<span style="color:var(--text4)">&#8212;</span>' : esc(d['Extensions']||'')}</td>
       <td>${len}</td>
       <td><span class="metric-cell ${ldauCls}">${ldau}</span></td>
       <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${actBar}%;background:var(--purple)"></div></div><span class="metric-cell ${actCls}">${act}</span></div></td>
@@ -2600,73 +2695,6 @@ setInterval(refreshFromSheet, 5000);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) refreshFromSheet();
 });
-// ─── Multi-Select Widget ─────────────────────────────────────────
-function buildMs(id, options) {
-  var wrap = document.getElementById(id);
-  if (!wrap) return;
-  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
-  if (!MS[id]) MS[id] = {};
-  var state = MS[id];
-  // Remove stale selections
-  Object.keys(state).forEach(function(v) { if (options.indexOf(v) < 0) delete state[v]; });
-  var count = Object.keys(state).length;
-  var label = count === 0 ? placeholder : count === 1 ? Object.keys(state)[0] : count + ' selected';
-  var hasSel = count > 0;
-  var html = '<button class="ms-btn' + (hasSel ? ' has-sel' : '') + '" onclick="toggleMsDd(\'' + id + '\');event.stopPropagation()">' +
-    '<span class="ms-lbl">' + esc(label) + '</span></button>' +
-    '<div class="ms-dd" id="' + id + '-dd">';
-  if (options.length === 0) {
-    html += '<div class="ms-empty">No options</div>';
-  } else {
-    options.forEach(function(v) {
-      var sv = String(v);
-      html += '<label class="ms-opt"><input type="checkbox" value="' + esc(sv) + '"' +
-        (state[sv] ? ' checked' : '') + ' onchange="toggleMsVal(\'' + id + '\',this.value)">' +
-        esc(sv) + '</label>';
-    });
-  }
-  html += '</div>';
-  wrap.innerHTML = html;
-}
-function toggleMsDd(id) {
-  var dd = document.getElementById(id + '-dd');
-  if (!dd) return;
-  var isOpen = dd.classList.contains('open');
-  document.querySelectorAll('.ms-dd.open').forEach(function(d) { d.classList.remove('open'); });
-  if (!isOpen) dd.classList.add('open');
-}
-function toggleMsVal(id, val) {
-  if (!MS[id]) MS[id] = {};
-  var state = MS[id];
-  if (state[val]) { delete state[val]; } else { state[val] = true; }
-  var wrap = document.getElementById(id);
-  if (wrap) {
-    var placeholder = wrap.getAttribute('data-placeholder') || 'All';
-    var count = Object.keys(state).length;
-    var text = count === 0 ? placeholder : count === 1 ? Object.keys(state)[0] : count + ' selected';
-    var lbl = wrap.querySelector('.ms-lbl');
-    var btn = wrap.querySelector('.ms-btn');
-    if (lbl) lbl.textContent = text;
-    if (btn) { if (count > 0) btn.classList.add('has-sel'); else btn.classList.remove('has-sel'); }
-  }
-  renderPerfTable();
-}
-function getMs(id) { return MS[id] ? Object.keys(MS[id]) : []; }
-function clearMs(id) {
-  MS[id] = {};
-  var wrap = document.getElementById(id);
-  if (!wrap) return;
-  var placeholder = wrap.getAttribute('data-placeholder') || 'All';
-  var lbl = wrap.querySelector('.ms-lbl');
-  var btn = wrap.querySelector('.ms-btn');
-  if (lbl) lbl.textContent = placeholder;
-  if (btn) btn.classList.remove('has-sel');
-  wrap.querySelectorAll('input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
-}
-document.addEventListener('click', function() {
-  document.querySelectorAll('.ms-dd.open').forEach(function(d) { d.classList.remove('open'); });
-});
-
 </script>
 </body>
 </html>
