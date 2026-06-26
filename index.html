@@ -1027,44 +1027,9 @@ tr.benchmark-row td.rank-cell { color: var(--yellow) !important; font-weight: 70
         <table class="main-table" id="perf-table">
           <thead id="perf-benchmark-head"></thead>
           <thead id="perf-cols-head">
-          <tr class="perf-grp">
-            <th colspan="10" class="grp-blank"></th>
-            <th colspan="5" class="grp grp-d7">D7</th>
-            <th colspan="5" class="grp grp-d15 d15-start">D15</th>
-            <th colspan="10" class="grp grp-ext ext-start">Extensions - D15</th>
-          </tr>
-          <tr id="perf-col-row">
-            <th>S.No</th>
-            <th data-col="Type" onclick="sortPerfTable(this)">Type</th>
-            <th data-col="Batch" onclick="sortPerfTable(this)">Batch</th>
-            <th data-col="show_title" onclick="sortPerfTable(this)">Show Name</th>
-            <th data-col="Source Name" onclick="sortPerfTable(this)">Source</th>
-            <th data-col="Sub-Genre" onclick="sortPerfTable(this)">Sub-Genre</th>
-            <th data-col="Platform" onclick="sortPerfTable(this)">Platform</th>
-            <th data-col="List" onclick="sortPerfTable(this)">List</th>
-            <th data-col="Extensions" onclick="sortPerfTable(this)">Extensions</th>
-            <th data-col="Show Length" onclick="sortPerfTable(this)">Length</th>
-            <th data-col="True Ldau" onclick="sortPerfTable(this)">True LDAU</th>
-            <th data-col="pct_activation" onclick="sortPerfTable(this)">% Activation</th>
-            <th data-col="H5_Ret_D7" onclick="sortPerfTable(this)" class="sort-desc">H5 Ret. D7%</th>
-            <th data-col="H10_Ret_D7" onclick="sortPerfTable(this)">H10 Ret. D7%</th>
-            <th data-col="H15_Ret_D7" onclick="sortPerfTable(this)">H15 Ret. D7%</th>
-            <th data-col="True_Ldau_D15" onclick="sortPerfTable(this)" class="d15-start">True LDAU</th>
-            <th data-col="pct_activation_D15" onclick="sortPerfTable(this)">% Activation</th>
-            <th data-col="H5_Ret_D15" onclick="sortPerfTable(this)">H5 Ret. D7%</th>
-            <th data-col="H10_Ret_D15" onclick="sortPerfTable(this)">H10 Ret. D7%</th>
-            <th data-col="H15_Ret_D15" onclick="sortPerfTable(this)">H15 Ret. D7%</th>
-            <th data-col="True_Ldau_Ext" onclick="sortPerfTable(this)" class="ext-start">True LDAU</th>
-            <th data-col="pct_activation_Ext" onclick="sortPerfTable(this)">% Activation</th>
-            <th data-col="H5_Ret_Ext" onclick="sortPerfTable(this)">H5 Ret.</th>
-            <th data-col="H10_Ret_Ext" onclick="sortPerfTable(this)">H10 Ret.</th>
-            <th data-col="H15_Ret_Ext" onclick="sortPerfTable(this)">H15 Ret.</th>
-            <th data-col="H20_Ret_Ext" onclick="sortPerfTable(this)">H20 Ret.</th>
-            <th data-col="H25_Ret_Ext" onclick="sortPerfTable(this)">H25 Ret.</th>
-            <th data-col="H30_Ret_Ext" onclick="sortPerfTable(this)">H30 Ret.</th>
-            <th data-col="H40_Ret_Ext" onclick="sortPerfTable(this)">H40 Ret.</th>
-            <th data-col="H50_Ret_Ext" onclick="sortPerfTable(this)">H50 Ret.</th>
-          </tr></thead>
+            <tr class="perf-grp" id="perf-grp-row"></tr>
+            <tr id="perf-col-row"></tr>
+          </thead>
           <tbody id="perf-tbody"></tbody>
         </table>
       </div>
@@ -1620,40 +1585,39 @@ function perfColor(val, max) {
   if (pct >= 0.33) return 'metric-mid';
   return 'metric-lo';
 }
-function renderPerfTable() {
+function renderPerfTable(){
   var typeFil  = getMs('perf-f-type');
   var batchFil = getMs('perf-f-batch');
   var platform = getMs('perf-f-platform');
   var list     = getMs('perf-f-list');
   var extFil   = getMs('perf-f-ext');
-  const search = document.getElementById('perf-search').value.toLowerCase();
-  // Benchmark "The Return of Tiger" — D7 + D15 values pulled from the sheet's header row.
-  const BENCHMARK = {
-    'show_title': 'The Return of Tiger',
-    'Type': '—','Batch': '—','Sub-Genre': '—','Platform': '—','List': '—','Source Name': '—','Clean URL': '',
-    'Show Length': 275,'True Ldau': 45481,'pct_activation': 0.5952,'H5_Ret_D7': 19.72,'H10_Ret_D7': 13.26,'H15_Ret_D7': 11.22,
-    'True_Ldau_D15': 45703,'pct_activation_D15': 0.6185,'H5_Ret_D15': 21.17,'H10_Ret_D15': 15.62,'H15_Ret_D15': 14.03,
-    'True_Ldau_Ext': null,'pct_activation_Ext': null,'H5_Ret_Ext': null,'H10_Ret_Ext': null,'H15_Ret_Ext': null,
-    'H20_Ret_Ext': null,'H25_Ret_Ext': null,'H30_Ret_Ext': null,'H40_Ret_Ext': null,'H50_Ret_Ext': null,
-    '__benchmark': true
-  };
-  // Prefer the live tiger row extracted from the sheet's above-header rows (public-CSV path).
-  if (PERF_BENCH) Object.assign(BENCHMARK, PERF_BENCH);
-  // If "The Return of Tiger" also appears as a normal row in the live sheet, pull any newer numbers from there.
-  const tigerRow = PERF_DATA.find(d => /return\s+of\s+tiger/i.test(String(d['show_title']||'')));
-  if (tigerRow) {
-    ['H5_Ret_D7','H10_Ret_D7','H15_Ret_D7','True Ldau','pct_activation','Show Length',
-     'True_Ldau_D15','pct_activation_D15','H5_Ret_D15','H10_Ret_D15','H15_Ret_D15',
-     'True_Ldau_Ext','pct_activation_Ext','H5_Ret_Ext','H10_Ret_Ext','H15_Ret_Ext',
-     'H20_Ret_Ext','H25_Ret_Ext','H30_Ret_Ext','H40_Ret_Ext','H50_Ret_Ext']
-      .forEach(k => { if (tigerRow[k] != null && tigerRow[k] !== '') BENCHMARK[k] = tigerRow[k]; });
+  const search = (document.getElementById('perf-search').value || '').toLowerCase();
+
+  // Use the live model once it's been built from the sheet; until then fall back to the legacy
+  // layout so the bundled seed data still renders.
+  const M = PERF_MODEL || LEGACY_PERF_MODEL;
+
+  // Benchmark row (The Return of Tiger) — extracted from the sheet's banner rows.
+  let BENCHMARK = PERF_BENCH ? Object.assign({}, PERF_BENCH) : null;
+  const tigerRow = PERF_DATA.find(d => /return\s+of\s+tiger/i.test(String(d['show_title'] || '')));
+  if (tigerRow){
+    if (!BENCHMARK){ BENCHMARK = Object.assign({}, tigerRow, { __benchmark:true }); }
+    else {
+      Object.keys(tigerRow).forEach(k => {
+        if (k === '__benchmark') return;
+        if (/^m_g\d+_c\d+$/.test(k) || k === 'Show Length'){
+          if (tigerRow[k] != null && tigerRow[k] !== '') BENCHMARK[k] = tigerRow[k];
+        }
+      });
+    }
   }
-  var filtered = PERF_DATA.filter(function(d) {
-    if (typeFil.length  && typeFil.indexOf(d['Type'])     < 0) return false;
-    if (batchFil.length && batchFil.indexOf(d['Batch'])   < 0) return false;
-    if (platform.length && platform.indexOf(d['Platform'])< 0) return false;
-    if (list.length     && list.indexOf(d['List'])        < 0) return false;
-    if (extFil.length   && extFil.indexOf(d['Extensions'])< 0) return false;
+
+  var filtered = PERF_DATA.filter(function(d){
+    if (typeFil.length  && typeFil.indexOf(d['Type'])      < 0) return false;
+    if (batchFil.length && batchFil.indexOf(d['Batch'])    < 0) return false;
+    if (platform.length && platform.indexOf(d['Platform']) < 0) return false;
+    if (list.length     && list.indexOf(d['List'])         < 0) return false;
+    if (extFil.length   && extFil.indexOf(d['Extensions']) < 0) return false;
     if (search && JSON.stringify(d).toLowerCase().indexOf(search) < 0) return false;
     return true;
   });
@@ -1663,202 +1627,73 @@ function renderPerfTable() {
     if (isNum) return perfSort.dir === 'asc' ? parseFloat(av) - parseFloat(bv) : parseFloat(bv) - parseFloat(av);
     return perfSort.dir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
   });
+
   const total = filtered.length;
   document.getElementById('perf-filter-count').textContent = `${total} of ${PERF_DATA.length} shows`;
   document.getElementById('perf-tbl-count').textContent = `${total} show${total !== 1 ? 's' : ''}`;
   const avgLen = total ? (filtered.reduce((s,d)=>s+(parseFloat(d['Show Length'])||0),0)/total).toFixed(1) : 0;
-  const maxAct2 = total ? (Math.max(...filtered.map(d=>parseFloat(d['pct_activation'])||0))*100).toFixed(1) : 0;
-  const maxRet = total ? Math.max(...filtered.map(d=>parseFloat(d['H5_Ret_D7'])||0)).toFixed(1) : 0;
+  const firstGroup = M.groups[0] || { cols:[], label:'D7' };
+  const pctCol = (firstGroup.cols.find(c => c.kind === 'pct') || {}).key;
+  const retCol = M.primaryRet;
+  const maxAct2 = (total && pctCol) ? (Math.max(...filtered.map(d=>parseFloat(d[pctCol])||0))*100).toFixed(1) : 0;
+  const maxRet  = (total && retCol) ? Math.max(...filtered.map(d=>parseFloat(d[retCol])||0)).toFixed(1) : 0;
   document.getElementById('perf-stats-strip').innerHTML = `
     <div class="stat-item"><div class="stat-num a">${total}</div><div class="stat-lbl">Shows</div></div>
     <div class="stat-item"><div class="stat-num t">${avgLen}h</div><div class="stat-lbl">Avg Length</div></div>
     <div class="stat-item"><div class="stat-num">${maxAct2}%</div><div class="stat-lbl">Highest Activation</div></div>
-    <div class="stat-item"><div class="stat-num" style="color:var(--green)">${maxRet}%</div><div class="stat-lbl">Top D7 Ret.</div></div>
+    <div class="stat-item"><div class="stat-num" style="color:var(--green)">${maxRet}%</div><div class="stat-lbl">Top ${esc(firstGroup.label || 'D7')} Ret.</div></div>
   `;
-  const allRows = [BENCHMARK, ...filtered];
-  const maxD7 = Math.max(...allRows.map(d=>parseFloat(d['H5_Ret_D7'])||0));
-  const maxD10 = Math.max(...allRows.map(d=>parseFloat(d['H10_Ret_D7'])||0));
-  const maxD15 = Math.max(...allRows.map(d=>parseFloat(d['H15_Ret_D7'])||0));
-  const maxLdau = Math.max(...allRows.map(d=>parseFloat(d['True Ldau'])||0));
-  const maxAct = Math.max(...allRows.map(d=>parseFloat(d['pct_activation'])||0));
-  // D15 block maxes (for color + bar scaling)
-  const maxLdau15 = Math.max(...allRows.map(d=>parseFloat(d['True_Ldau_D15'])||0));
-  const maxAct15  = Math.max(...allRows.map(d=>parseFloat(d['pct_activation_D15'])||0));
-  const maxH5_15  = Math.max(...allRows.map(d=>parseFloat(d['H5_Ret_D15'])||0));
-  const maxH10_15 = Math.max(...allRows.map(d=>parseFloat(d['H10_Ret_D15'])||0));
-  const maxH15_15 = Math.max(...allRows.map(d=>parseFloat(d['H15_Ret_D15'])||0));
-  // Extensions D7 block maxes
-  const maxLdauExt  = Math.max(...allRows.map(d=>parseFloat(d['True_Ldau_Ext'])||0));
-  const maxActExt   = Math.max(...allRows.map(d=>parseFloat(d['pct_activation_Ext'])||0));
-  const maxH5Ext    = Math.max(...allRows.map(d=>parseFloat(d['H5_Ret_Ext'])||0));
-  const maxH10Ext   = Math.max(...allRows.map(d=>parseFloat(d['H10_Ret_Ext'])||0));
-  const maxH15Ext   = Math.max(...allRows.map(d=>parseFloat(d['H15_Ret_Ext'])||0));
-  const maxH20Ext   = Math.max(...allRows.map(d=>parseFloat(d['H20_Ret_Ext'])||0));
-  const maxH25Ext   = Math.max(...allRows.map(d=>parseFloat(d['H25_Ret_Ext'])||0));
-  const maxH30Ext   = Math.max(...allRows.map(d=>parseFloat(d['H30_Ret_Ext'])||0));
-  const maxH40Ext   = Math.max(...allRows.map(d=>parseFloat(d['H40_Ret_Ext'])||0));
-  const maxH50Ext   = Math.max(...allRows.map(d=>parseFloat(d['H50_Ret_Ext'])||0));
-  const tbody = document.getElementById('perf-tbody');
 
-  // ── Sync extra (sheet-only) columns into the table header ────────
-  // Any column the sheet has that isn't one of the known fields gets appended.
-  const extraCols = PERF_HEADER.filter((_h, idx) => !PERF_KNOWN_IDX.has(idx) && String(_h).trim() !== '');
+  const allRows = BENCHMARK ? [BENCHMARK, ...filtered] : filtered.slice();
+  const colMax = {};
+  for (const g of M.groups) for (const c of g.cols){
+    colMax[c.key] = Math.max(0, ...allRows.map(d => parseFloat(d[c.key]) || 0));
+  }
+
+  // Build the two header rows straight from the model.
+  const NUM_META = 10; // S.No + Type + Batch + Show Name + Source + Sub-Genre + Platform + List + Extensions + Length
+  const metaCols = [
+    ['Type','Type'],['Batch','Batch'],['show_title','Show Name'],['Source Name','Source'],
+    ['Sub-Genre','Sub-Genre'],['Platform','Platform'],['List','List'],['Extensions','Extensions'],['Show Length','Length'],
+  ];
+  const grpRow = document.getElementById('perf-grp-row');
+  if (grpRow){
+    let h = `<th colspan="${NUM_META}" class="grp-blank"></th>`;
+    for (const g of M.groups){
+      h += `<th colspan="${g.cols.length}" class="grp ${g.cls}${g.sep ? ' d15-start' : ''}">${esc(g.label)}</th>`;
+    }
+    grpRow.innerHTML = h;
+  }
   const colRow = document.getElementById('perf-col-row');
-  if (colRow) {
-    // Remove previously-appended extras
-    Array.from(colRow.querySelectorAll('th[data-extra="1"]')).forEach(t => t.remove());
-    // Append fresh ones
-    for (const h of extraCols) {
-      const th = document.createElement('th');
-      th.setAttribute('data-extra', '1');
-      th.setAttribute('data-col', h);
-      th.textContent = h;
-      th.onclick = function() { sortPerfTable(th); };
-      colRow.appendChild(th);
+  if (colRow){
+    let h = `<th>S.No</th>`;
+    for (const mc of metaCols){
+      // Stable meta columns keep their friendly display labels; the metric columns are the
+      // ones driven dynamically from the sheet.
+      h += `<th data-col="${esc(mc[0])}" onclick="sortPerfTable(this)">${esc(mc[1])}</th>`;
     }
-  }
-  // ── Sync known column display names from the live sheet header ─────
-  if (PERF_HEADER.length && PERF_IDX && colRow) {
-    var I = PERF_IDX;
-    var knownMap = [
-      [2,I.type],[3,I.batch],[4,I.title],[5,I.source],[6,I.sub],[7,I.plat],
-      [8,I.list],[9,I.ext_info],[10,I.len],[11,I.ldau],[12,I.act],
-      [13,I.h5],[14,I.h10],[15,I.h15],
-      [16,I.d15?I.d15.ldau:-1],[17,I.d15?I.d15.act:-1],[18,I.d15?I.d15.h5:-1],
-      [19,I.d15?I.d15.h10:-1],[20,I.d15?I.d15.h15:-1],
-      [21,I.ext?I.ext.ldau:-1],[22,I.ext?I.ext.act:-1],[23,I.ext?I.ext.h5:-1],
-      [24,I.ext?I.ext.h10:-1],[25,I.ext?I.ext.h15:-1],[26,I.ext?I.ext.h20:-1],
-      [27,I.ext?I.ext.h25:-1],[28,I.ext?I.ext.h30:-1],[29,I.ext?I.ext.h40:-1],
-      [30,I.ext?I.ext.h50:-1],
-    ];
-    var ths = Array.from(colRow.querySelectorAll('th:not([data-extra="1"])'));
-    knownMap.forEach(function(pair){
-      var pos=pair[0], hdrIdx=pair[1];
-      var th = ths[pos-1]; if (!th) return;
-      var name = (hdrIdx>=0 && PERF_HEADER[hdrIdx]) ? String(PERF_HEADER[hdrIdx]).trim() : '';
-      if (name) th.textContent = name;
-    });
-  }
-  // ── Sync the group banner row to cover any extra columns ─────────
-  // The grp-ext banner only has colspan=10 for the fixed Ext cols;
-  // extra sheet columns would appear orphaned with no group label above them.
-  // Solution: remove any old extra-group th, then add a "D15 Extended" banner th.
-  const grpRow = document.querySelector('#perf-table .perf-grp');
-  if (grpRow) {
-    Array.from(grpRow.querySelectorAll('th[data-extra-grp="1"]')).forEach(t => t.remove());
-    if (extraCols.length > 0) {
-      const extraGrpTh = document.createElement('th');
-      extraGrpTh.setAttribute('data-extra-grp', '1');
-      extraGrpTh.colSpan = extraCols.length;
-      extraGrpTh.className = 'grp grp-d15';
-      extraGrpTh.style.cssText = 'background:color-mix(in srgb,var(--purple) 12%,var(--bg2));color:var(--purple);border-left:2px solid var(--border);';
-      extraGrpTh.textContent = 'D15 Extended';
-      grpRow.appendChild(extraGrpTh);
+    for (const g of M.groups){
+      g.cols.forEach((c, ci) => {
+        const sep = (g.sep && ci === 0) ? 'd15-start' : '';
+        h += `<th data-col="${esc(c.key)}" onclick="sortPerfTable(this)" class="${sep}">${esc(c.label)}</th>`;
+      });
     }
+    colRow.innerHTML = h;
+    const cur = colRow.querySelector(`th[data-col="${perfSort.col}"]`);
+    if (cur) cur.classList.add(perfSort.dir === 'asc' ? 'sort-asc' : 'sort-desc');
   }
-  function buildRow(d, rankLabel, isBenchmark) {
-    const d7v = d['H5_Ret_D7'] != null && d['H5_Ret_D7'] !== '' ? parseFloat(d['H5_Ret_D7']) : null;
-    const d10v = d['H10_Ret_D7'] != null && d['H10_Ret_D7'] !== '' ? parseFloat(d['H10_Ret_D7']) : null;
-    const d15v = d['H15_Ret_D7'] != null && d['H15_Ret_D7'] !== '' ? parseFloat(d['H15_Ret_D7']) : null;
-    const actv = d['pct_activation'] != null && d['pct_activation'] !== '' ? parseFloat(d['pct_activation']) : null;
-    const ldauv = d['True Ldau'] != null && d['True Ldau'] !== '' ? parseFloat(d['True Ldau']) : null;
-    const lenv = d['Show Length'] != null && d['Show Length'] !== '' ? parseFloat(d['Show Length']) : null;
-    const d7 = d7v != null ? d7v.toFixed(2) : '—';
-    const d10 = d10v != null ? d10v.toFixed(2) : '—';
-    const d15 = d15v != null ? d15v.toFixed(2) : '—';
-    const act = actv != null ? (actv*100).toFixed(1)+'%' : '—';
-    const ldau = ldauv != null ? Math.round(ldauv).toLocaleString() : '—';
-    const len = lenv != null ? `<span class="len-cell">${lenv.toFixed(1)}h</span>` : '—';
-    const d7Cls = d7v != null ? perfColor(d7v, maxD7) : '';
-    const d10Cls = d10v != null ? perfColor(d10v, maxD10) : '';
-    const d15Cls = d15v != null ? perfColor(d15v, maxD15) : '';
-    const ldauCls = ldauv != null ? perfColor(ldauv, maxLdau) : '';
-    const actCls = actv != null ? perfColor(actv, maxAct) : '';
-    const d7Bar = d7v != null && maxD7 ? Math.round(d7v/maxD7*100) : 0;
-    const d10Bar = d10v != null && maxD10 ? Math.round(d10v/maxD10*100) : 0;
-    const d15Bar = d15v != null && maxD15 ? Math.round(d15v/maxD15*100) : 0;
-    const actBar = actv != null && maxAct ? Math.round(actv/maxAct*100) : 0;
-    // ── D15 block values ──
-    const ldau15v = d['True_Ldau_D15'] != null && d['True_Ldau_D15'] !== '' ? parseFloat(d['True_Ldau_D15']) : null;
-    const act15v  = d['pct_activation_D15'] != null && d['pct_activation_D15'] !== '' ? parseFloat(d['pct_activation_D15']) : null;
-    const h5_15v  = d['H5_Ret_D15'] != null && d['H5_Ret_D15'] !== '' ? parseFloat(d['H5_Ret_D15']) : null;
-    const h10_15v = d['H10_Ret_D15'] != null && d['H10_Ret_D15'] !== '' ? parseFloat(d['H10_Ret_D15']) : null;
-    const h15_15v = d['H15_Ret_D15'] != null && d['H15_Ret_D15'] !== '' ? parseFloat(d['H15_Ret_D15']) : null;
-    const ldau15 = ldau15v != null ? Math.round(ldau15v).toLocaleString() : '—';
-    const act15  = act15v != null ? (act15v*100).toFixed(1)+'%' : '—';
-    const h5_15  = h5_15v != null ? h5_15v.toFixed(2) : '—';
-    const h10_15 = h10_15v != null ? h10_15v.toFixed(2) : '—';
-    const h15_15 = h15_15v != null ? h15_15v.toFixed(2) : '—';
-    const ldau15Cls = ldau15v != null ? perfColor(ldau15v, maxLdau15) : '';
-    const act15Cls  = act15v != null ? perfColor(act15v, maxAct15) : '';
-    const h5_15Cls  = h5_15v != null ? perfColor(h5_15v, maxH5_15) : '';
-    const h10_15Cls = h10_15v != null ? perfColor(h10_15v, maxH10_15) : '';
-    const h15_15Cls = h15_15v != null ? perfColor(h15_15v, maxH15_15) : '';
-    const act15Bar  = act15v != null && maxAct15 ? Math.round(act15v/maxAct15*100) : 0;
-    const h5_15Bar  = h5_15v != null && maxH5_15 ? Math.round(h5_15v/maxH5_15*100) : 0;
-    const h10_15Bar = h10_15v != null && maxH10_15 ? Math.round(h10_15v/maxH10_15*100) : 0;
-    const h15_15Bar = h15_15v != null && maxH15_15 ? Math.round(h15_15v/maxH15_15*100) : 0;
-    // ── Extensions D7 block values ──
-    const ldauExtv = d['True_Ldau_Ext']      != null && d['True_Ldau_Ext']      !== '' ? parseFloat(d['True_Ldau_Ext'])      : null;
-    const actExtv  = d['pct_activation_Ext'] != null && d['pct_activation_Ext'] !== '' ? parseFloat(d['pct_activation_Ext']) : null;
-    const h5Extv   = d['H5_Ret_Ext']  != null && d['H5_Ret_Ext']  !== '' ? parseFloat(d['H5_Ret_Ext'])  : null;
-    const h10Extv  = d['H10_Ret_Ext'] != null && d['H10_Ret_Ext'] !== '' ? parseFloat(d['H10_Ret_Ext']) : null;
-    const h15Extv  = d['H15_Ret_Ext'] != null && d['H15_Ret_Ext'] !== '' ? parseFloat(d['H15_Ret_Ext']) : null;
-    const h20Extv  = d['H20_Ret_Ext'] != null && d['H20_Ret_Ext'] !== '' ? parseFloat(d['H20_Ret_Ext']) : null;
-    const h25Extv  = d['H25_Ret_Ext'] != null && d['H25_Ret_Ext'] !== '' ? parseFloat(d['H25_Ret_Ext']) : null;
-    const h30Extv  = d['H30_Ret_Ext'] != null && d['H30_Ret_Ext'] !== '' ? parseFloat(d['H30_Ret_Ext']) : null;
-    const h40Extv  = d['H40_Ret_Ext'] != null && d['H40_Ret_Ext'] !== '' ? parseFloat(d['H40_Ret_Ext']) : null;
-    const h50Extv  = d['H50_Ret_Ext'] != null && d['H50_Ret_Ext'] !== '' ? parseFloat(d['H50_Ret_Ext']) : null;
-    const ldauExt  = ldauExtv != null ? Math.round(ldauExtv).toLocaleString() : '—';
-    const actExt   = actExtv  != null ? (actExtv*100).toFixed(1)+'%' : '—';
-    const h5Ext    = h5Extv   != null ? h5Extv.toFixed(2)  : '—';
-    const h10Ext   = h10Extv  != null ? h10Extv.toFixed(2) : '—';
-    const h15Ext   = h15Extv  != null ? h15Extv.toFixed(2) : '—';
-    const h20Ext   = h20Extv  != null ? h20Extv.toFixed(2) : '—';
-    const h25Ext   = h25Extv  != null ? h25Extv.toFixed(2) : '—';
-    const h30Ext   = h30Extv  != null ? h30Extv.toFixed(2) : '—';
-    const h40Ext   = h40Extv  != null ? h40Extv.toFixed(2) : '—';
-    const h50Ext   = h50Extv  != null ? h50Extv.toFixed(2) : '—';
-    const ldauExtCls = ldauExtv != null ? perfColor(ldauExtv, maxLdauExt) : '';
-    const actExtCls  = actExtv  != null ? perfColor(actExtv,  maxActExt)  : '';
-    const h5ExtCls   = h5Extv   != null ? perfColor(h5Extv,   maxH5Ext)  : '';
-    const h10ExtCls  = h10Extv  != null ? perfColor(h10Extv,  maxH10Ext) : '';
-    const h15ExtCls  = h15Extv  != null ? perfColor(h15Extv,  maxH15Ext) : '';
-    const h20ExtCls  = h20Extv  != null ? perfColor(h20Extv,  maxH20Ext) : '';
-    const h25ExtCls  = h25Extv  != null ? perfColor(h25Extv,  maxH25Ext) : '';
-    const h30ExtCls  = h30Extv  != null ? perfColor(h30Extv,  maxH30Ext) : '';
-    const h40ExtCls  = h40Extv  != null ? perfColor(h40Extv,  maxH40Ext) : '';
-    const h50ExtCls  = h50Extv  != null ? perfColor(h50Extv,  maxH50Ext) : '';
-    const actExtBar  = actExtv  != null && maxActExt  ? Math.round(actExtv /maxActExt *100) : 0;
-    const h5ExtBar   = h5Extv   != null && maxH5Ext   ? Math.round(h5Extv  /maxH5Ext  *100) : 0;
-    const h10ExtBar  = h10Extv  != null && maxH10Ext  ? Math.round(h10Extv /maxH10Ext *100) : 0;
-    const h15ExtBar  = h15Extv  != null && maxH15Ext  ? Math.round(h15Extv /maxH15Ext *100) : 0;
-    const h20ExtBar  = h20Extv  != null && maxH20Ext  ? Math.round(h20Extv /maxH20Ext *100) : 0;
-    const h25ExtBar  = h25Extv  != null && maxH25Ext  ? Math.round(h25Extv /maxH25Ext *100) : 0;
-    const h30ExtBar  = h30Extv  != null && maxH30Ext  ? Math.round(h30Extv /maxH30Ext *100) : 0;
-    const h40ExtBar  = h40Extv  != null && maxH40Ext  ? Math.round(h40Extv /maxH40Ext *100) : 0;
-    const h50ExtBar  = h50Extv  != null && maxH50Ext  ? Math.round(h50Extv /maxH50Ext *100) : 0;
-    // show_title is clickable → CMS Link (from perf row, or fall back to looking it up in the catalogue by Show ID)
+
+  function buildRow(d, rankLabel, isBenchmark){
     let cmsLink = d['CMS Link'] || '';
-    if (!cmsLink && d['Show ID']) {
-      const match = DATA.find(c => c['Show ID'] === d['Show ID']);
-      if (match) cmsLink = match['CMS Link'] || '';
-    }
-    if (cmsLink && !cmsLink.startsWith('http')) cmsLink = 'https://' + cmsLink;
-    const titleHtml = esc(d['show_title']||'—');
+    if (!cmsLink && d['Show ID']){ const m = DATA.find(c => c['Show ID'] === d['Show ID']); if (m) cmsLink = m['CMS Link'] || ''; }
+    if (cmsLink && !String(cmsLink).startsWith('http')) cmsLink = 'https://' + cmsLink;
+    const titleHtml = esc(d['show_title'] || '—');
     const titleLinked = cmsLink
       ? `<a href="${esc(cmsLink)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(26,122,110,0.35);">${titleHtml}</a>`
       : titleHtml;
-    const nameCell = isBenchmark
-      ? `${titleHtml}<span class="benchmark-tag">Benchmark</span>`
-      : titleLinked;
-    // Source Name → click goes to Clean URL.
-    // Fallback: if this perf row has no Clean URL, look it up from the catalogue by Show ID.
+    const nameCell = isBenchmark ? `${titleHtml}<span class="benchmark-tag">Benchmark</span>` : titleLinked;
     let cleanUrl = d['Clean URL'] || '';
-    if (!cleanUrl && d['Show ID']) {
-      const m = DATA.find(c => c['Show ID'] === d['Show ID']);
-      if (m) cleanUrl = m['Clean URL'] || '';
-    }
+    if (!cleanUrl && d['Show ID']){ const mm = DATA.find(c => c['Show ID'] === d['Show ID']); if (mm) cleanUrl = mm['Clean URL'] || ''; }
     if (cleanUrl && !String(cleanUrl).startsWith('http')) cleanUrl = 'https://' + cleanUrl;
     const sourceCell = isBenchmark
       ? '<span style="color:var(--text4)">—</span>'
@@ -1869,58 +1704,53 @@ function renderPerfTable() {
           : '—');
     const typeCell  = isBenchmark ? '<span style="color:var(--text4);font-size:11px">—</span>' : typeBadge(d['Type'] || d['Batch']);
     const batchCell = isBenchmark ? '<span style="color:var(--text4);font-size:11px">—</span>' : typeBadge(d['Batch'] || d['Type']);
-    const subCell = isBenchmark ? '<span style="color:var(--text4)">—</span>' : esc(d['Sub-Genre']||'—');
-    const platCell = isBenchmark ? '<span style="color:var(--text4)">—</span>' : esc(d['Platform']||'—');
-    const listCell = isBenchmark ? '<span style="color:var(--text4)">—</span>' : `<span class="pipeline-chip">${esc(d['List']||'—')}</span>`;
-    // Extra (sheet-only) columns at the end — auto-format numbers, otherwise plain text
-    const extraCells = extraCols.map(h => {
-      const v = d[h];
-      if (isBenchmark || v == null || v === '') return '<td><span style="color:var(--text4)">—</span></td>';
-      if (typeof v === 'number') {
-        // If looks like a fraction 0..1 → render as %, else thousands-formatted
-        if (v >= 0 && v <= 1) return `<td>${(v*100).toFixed(1)}%</td>`;
-        if (Number.isInteger(v) && Math.abs(v) >= 1000) return `<td>${v.toLocaleString()}</td>`;
-        return `<td>${v}</td>`;
-      }
-      return `<td>${esc(String(v))}</td>`;
-    }).join('');
-    return `<tr class="${isBenchmark ? 'benchmark-row' : ''}">
-      <td class="rank-cell">${rankLabel}</td>
-      <td>${typeCell}</td>
-      <td>${batchCell}</td>
-      <td class="show-name">${nameCell}</td>
-      <td>${sourceCell}</td>
-      <td>${subCell}</td>
-      <td>${platCell}</td>
-      <td>${listCell}</td>
-      <td>${isBenchmark ? '<span style="color:var(--text4)">&#8212;</span>' : esc(d['Extensions']||'')}</td>
-      <td>${len}</td>
-      <td><span class="metric-cell ${ldauCls}">${ldau}</span></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${actBar}%;background:var(--purple)"></div></div><span class="metric-cell ${actCls}">${act}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${d7Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${d7Cls}">${d7}%</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${d10Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${d10Cls}">${d10}%</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${d15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${d15Cls}">${d15v != null ? d15+'%' : '—'}</span></div></td>
-      <td class="d15-start"><span class="metric-cell ${ldau15Cls}">${ldau15}</span></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${act15Bar}%;background:var(--purple)"></div></div><span class="metric-cell ${act15Cls}">${act15}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h5_15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h5_15Cls}">${h5_15v != null ? h5_15+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h10_15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h10_15Cls}">${h10_15v != null ? h10_15+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h15_15Bar}%;background:var(--teal)"></div></div><span class="metric-cell ${h15_15Cls}">${h15_15v != null ? h15_15+'%' : '—'}</span></div></td>
-      <td class="ext-start"><span class="metric-cell ${ldauExtCls}">${ldauExt}</span></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${actExtBar}%;background:var(--purple)"></div></div><span class="metric-cell ${actExtCls}">${actExt}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h5ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h5ExtCls}">${h5Extv != null ? h5Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h10ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h10ExtCls}">${h10Extv != null ? h10Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h15ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h15ExtCls}">${h15Extv != null ? h15Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h20ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h20ExtCls}">${h20Extv != null ? h20Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h25ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h25ExtCls}">${h25Extv != null ? h25Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h30ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h30ExtCls}">${h30Extv != null ? h30Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h40ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h40ExtCls}">${h40Extv != null ? h40Ext+'%' : '—'}</span></div></td>
-      <td><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${h50ExtBar}%;background:var(--yellow)"></div></div><span class="metric-cell ${h50ExtCls}">${h50Extv != null ? h50Ext+'%' : '—'}</span></div></td>
-      ${extraCells}
-    </tr>`;
+    const subCell   = isBenchmark ? '<span style="color:var(--text4)">—</span>' : esc(d['Sub-Genre'] || '—');
+    const platCell  = isBenchmark ? '<span style="color:var(--text4)">—</span>' : esc(d['Platform'] || '—');
+    const listCell  = isBenchmark ? '<span style="color:var(--text4)">—</span>' : `<span class="pipeline-chip">${esc(d['List'] || '—')}</span>`;
+    const extCell   = isBenchmark ? '<span style="color:var(--text4)">&#8212;</span>' : esc(d['Extensions'] || '');
+    const lenv = (d['Show Length'] != null && d['Show Length'] !== '') ? parseFloat(d['Show Length']) : null;
+    const lenCell = lenv != null ? `<span class="len-cell">${lenv.toFixed(1)}h</span>` : '—';
+
+    let cells = `<td class="rank-cell">${rankLabel}</td>`
+      + `<td>${typeCell}</td>`
+      + `<td>${batchCell}</td>`
+      + `<td class="show-name">${nameCell}</td>`
+      + `<td>${sourceCell}</td>`
+      + `<td>${subCell}</td>`
+      + `<td>${platCell}</td>`
+      + `<td>${listCell}</td>`
+      + `<td>${extCell}</td>`
+      + `<td>${lenCell}</td>`;
+
+    for (const g of M.groups){
+      g.cols.forEach((c, ci) => {
+        const sep = (g.sep && ci === 0) ? ' ext-start' : '';
+        const raw = d[c.key];
+        const v = (raw != null && raw !== '') ? parseFloat(raw) : null;
+        const mx = colMax[c.key] || 0;
+        const cls = (v != null) ? perfColor(v, mx) : '';
+        if (c.kind === 'ldau'){
+          const disp = v != null ? Math.round(v).toLocaleString() : '—';
+          cells += `<td class="${sep.trim()}"><span class="metric-cell ${cls}">${disp}</span></td>`;
+        } else if (c.kind === 'pct'){
+          const disp = v != null ? (v*100).toFixed(1)+'%' : '—';
+          const bar = (v != null && mx) ? Math.round(v/mx*100) : 0;
+          cells += `<td class="${sep.trim()}"><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${bar}%;background:var(--purple)"></div></div><span class="metric-cell ${cls}">${disp}</span></div></td>`;
+        } else {
+          const disp = v != null ? v.toFixed(2)+'%' : '—';
+          const bar = (v != null && mx) ? Math.round(v/mx*100) : 0;
+          cells += `<td class="${sep.trim()}"><div class="bar-inline"><div class="bar-inline-track"><div class="bar-inline-fill" style="width:${bar}%;background:${g.retColor}"></div></div><span class="metric-cell ${cls}">${disp}</span></div></td>`;
+        }
+      });
+    }
+    return `<tr class="${isBenchmark ? 'benchmark-row' : ''}">${cells}</tr>`;
   }
-  document.getElementById('perf-benchmark-head').innerHTML = buildRow(BENCHMARK, 'BM', true);
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="${30 + extraCols.length}"><div class="empty-state"><div class="empty-icon">🔍</div>No shows match your filters</div></td></tr>`;
+
+  document.getElementById('perf-benchmark-head').innerHTML = BENCHMARK ? buildRow(BENCHMARK, 'BM', true) : '';
+  const tbody = document.getElementById('perf-tbody');
+  const totalCols = NUM_META + M.groups.reduce((s,g)=>s+g.cols.length, 0);
+  if (!filtered.length){
+    tbody.innerHTML = `<tr><td colspan="${totalCols}"><div class="empty-state"><div class="empty-icon">\u{1F50D}</div>No shows match your filters</div></td></tr>`;
     syncPerfStickyOffsets();
     return;
   }
@@ -2291,160 +2121,233 @@ function rowsToShows(header, rows) {
   }));
 }
 // Tracks the live header order + which columns were "known" (so we know which to append as extras)
+// Tracks the live sheet header order so column labels can be pulled straight from the sheet.
 let PERF_HEADER = [];
-let PERF_KNOWN_IDX = new Set();
-let PERF_IDX = null;       // column-index map (incl. D15 block) from the last parse
-let PERF_BENCH = null;     // "The Return of Tiger" benchmark extracted from the sheet (D7 + D15)
+let PERF_MODEL  = null;     // dynamic column model built from the sheet (meta + metric groups)
+let PERF_BENCH  = null;     // "The Return of Tiger" benchmark row (keyed with the live model)
 
-function rowsToPerf(header, rows) {
-  PERF_HEADER = header.slice();
-  PERF_KNOWN_IDX = new Set();
-  const i = {
-    type:   findCol(header, 'Type'),
-    batch:  findCol(header, 'Batch'),
-    id:     findCol(header, 'Show ID', 'showid'),
-    title:  findCol(header, 'show_title', 'Show Title', 'Show Name', 'Title'),
-    cms:    findCol(header, 'CMS Link', 'cmslink', 'CMS', 'CMS URL'),
-    source: findCol(header, 'Source Name', 'source', 'sourcename'),
-    clean:  findCol(header, 'Clean URL', 'cleanurl', 'Source URL', 'sourceurl', 'CleanURL', 'clean_url', 'Source Link', 'sourcelink', 'URL'),
-    plat:   findCol(header, 'Platform'),
-    list:   findCol(header, 'List', 'Pipeline'),
-    sub:    findCol(header, 'Sub-Genre', 'Sub Genre', 'Subgenre', 'Final Subgenre'),
-    len:    findCol(header, 'Show Length', 'Length'),
-    ldau:   findCol(header, 'True Ldau', 'Ldau', 'True LDAU', 'LDAU'),
-    act:    findCol(header, '% activation', 'pct_activation', 'activation', 'pct activation', 'percent activation'),
-    h5:     findCol(header, 'H5_Ret_D7', 'H5 Ret D7', 'H5 Ret D7%', 'H5 Ret. D7%', 'H5 Retention D7'),
-    h10:    findCol(header, 'H10_Ret_D7', 'H10 Ret D7', 'H10 Ret D7%', 'H10 Ret. D7%', 'H10 Retention D7'),
-    h15:    findCol(header, 'H15_Ret_D7', 'H15 Ret D7', 'H15 Ret D7%', 'H15 Ret. D7%', 'H15 Ret. D7 % (nth Hr)', 'H15 Ret. D7 %', 'H15 Retention D7', 'H15'),
-    ext_info: findCol(header, 'Extensions', 'Extension'),
-    // Also claim any duplicate Batch column so it doesn't render as an "extra"
-    batchAlt: -1,
-  };
-  // Fuzzy fallbacks for H5/H10/H15 D7 columns
-  if (i.h5  < 0) i.h5  = header.findIndex(h => /\bh\s*5\b/i.test(h)  && /ret/i.test(h));
-  if (i.h10 < 0) i.h10 = header.findIndex(h => /\bh\s*10\b/i.test(h) && /ret/i.test(h));
-  if (i.h10 < 0) i.h10 = header.findIndex(h => /h10/i.test(h));
-  if (i.h15 < 0) i.h15 = header.findIndex(h => /\bh\s*15\b/i.test(h) && /ret/i.test(h));
-  if (i.h15 < 0) i.h15 = header.findIndex(h => /h15/i.test(h));
-  // If "Type" wasn't found, allow Batch to fill that role; same the other way around
-  if (i.type < 0)  i.type  = i.batch;
-  if (i.batch < 0) i.batch = i.type;
-  i.batchAlt = -1;
-  console.log('[Dashboard] perf cols →', { type: header[i.type], title: header[i.title], h5col: i.h5, h5: header[i.h5], h10: header[i.h10], h15: header[i.h15] });
+// Standard retention buckets used to auto-label metric columns when the sheet leaves
+// the per-metric header cells blank (only the group banner — D7 / D15 / Extensions — is labelled).
+const PERF_RET_BUCKETS = [5,10,15,20,25,30,40,50,60,70,80,90,100,120,150,180];
 
-  // 25002500 D15 and Extensions: positional from D7 block start (i.ldau) 25002500
-  // Each block: [True Ldau, % activation, H5, H10, H15] = 5 cols, anchored on i.ldau.
-  // Extensions adds H20..H50 = 10 cols total. No name matching needed.
-  const blockStart = i.ldau;
-  const d15 = blockStart >= 0 ? {
-    ldau: blockStart + 5,
-    act:  blockStart + 6,
-    h5:   blockStart + 7,
-    h10:  blockStart + 8,
-    h15:  blockStart + 9,
-  } : { ldau: -1, act: -1, h5: -1, h10: -1, h15: -1 };
-  const ext = blockStart >= 0 ? {
-    ldau: blockStart + 10,
-    act:  blockStart + 11,
-    h5:   blockStart + 12,
-    h10:  blockStart + 13,
-    h15:  blockStart + 14,
-    h20:  blockStart + 15,
-    h25:  blockStart + 16,
-    h30:  blockStart + 17,
-    h40:  blockStart + 18,
-    h50:  blockStart + 19,
-  } : { ldau: -1, act: -1, h5: -1, h10: -1, h15: -1, h20: -1, h25: -1, h30: -1, h40: -1, h50: -1 };
-  console.log('[Dashboard] blockStart=col', blockStart, '| D15 ldau=col', d15.ldau, '| Ext ldau=col', ext.ldau, '| Ext h50=col', ext.h50);
-  [d15.ldau, d15.act, d15.h5, d15.h10, d15.h15].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
-  [ext.ldau, ext.act, ext.h5, ext.h10, ext.h15, ext.h20, ext.h25, ext.h30, ext.h40, ext.h50].forEach(idx => { if (idx >= 0) PERF_KNOWN_IDX.add(idx); });
-  PERF_IDX = { type: i.type, batch: i.batch, title: i.title, source: i.source, clean: i.clean, plat: i.plat, list: i.list, ext_info: i.ext_info, sub: i.sub, len: i.len, ldau: i.ldau, act: i.act, h5: i.h5, h10: i.h10, h15: i.h15, d15, ext };
-  Object.values(i).forEach(idx => { if (typeof idx === 'number' && idx >= 0) PERF_KNOWN_IDX.add(idx); });
-  return rows.filter(r => (r[i.title]||'').trim() !== '').map(r => {
-    const typeVal  = (r[i.type]  || '').trim();
-    const batchVal = (r[i.batch] || '').trim();
-    const obj = {
-      'Type':            typeVal,
-      'Batch':           batchVal,
-      'Show ID':         (r[i.id]||'').trim(),
-      'show_title':      (r[i.title]||'').trim(),
-      'CMS Link':        (r[i.cms]||'').trim(),
-      'Source Name':     (r[i.source]||'').trim(),
-      'Clean URL':       (r[i.clean]||'').trim(),
-      'Platform':        (r[i.plat]||'').trim(),
-      'List':            (r[i.list]||'').trim(),
-      'Extensions':      (r[i.ext_info]||'').trim(),
-      'Sub-Genre':       (r[i.sub]||'').trim(),
-      'Show Length':     toNum(r[i.len]),
-      'True Ldau':       toNum(r[i.ldau]),
-      'pct_activation':  toPct(r[i.act]),
-      'H5_Ret_D7':       toNum(r[i.h5]),
-      'H10_Ret_D7':      toNum(r[i.h10]),
-      'H15_Ret_D7':      toNum(r[i.h15]),
-      'True_Ldau_D15':       toNum(r[d15.ldau]),
-      'pct_activation_D15':  toPct(r[d15.act]),
-      'H5_Ret_D15':          toNum(r[d15.h5]),
-      'H10_Ret_D15':         toNum(r[d15.h10]),
-      'H15_Ret_D15':         toNum(r[d15.h15]),
-      'True_Ldau_Ext':       toNum(r[ext.ldau]),
-      'pct_activation_Ext':  toPct(r[ext.act]),
-      'H5_Ret_Ext':          toNum(r[ext.h5]),
-      'H10_Ret_Ext':         toNum(r[ext.h10]),
-      'H15_Ret_Ext':         toNum(r[ext.h15]),
-      'H20_Ret_Ext':         toNum(r[ext.h20]),
-      'H25_Ret_Ext':         toNum(r[ext.h25]),
-      'H30_Ret_Ext':         toNum(r[ext.h30]),
-      'H40_Ret_Ext':         toNum(r[ext.h40]),
-      'H50_Ret_Ext':         toNum(r[ext.h50]),
-    };
-    // Preserve extra (unknown) columns under their original sheet name.
-    // Auto-parse numbers; fall back to trimmed string.
-    header.forEach((h, idx) => {
-      if (PERF_KNOWN_IDX.has(idx)) return;
-      const raw = r[idx];
-      const n = toNum(raw);
-      obj[h] = n != null ? n : String(raw||'').trim();
-    });
-    return obj;
-  });
+// Percentages arrive in two flavours: "59.34%" (text) and 0.6 (already a fraction). Normalise to 0..1.
+function smartPct(raw){
+  if (raw == null || raw === '') return null;
+  const hasPct = /%/.test(String(raw));
+  let n = parseFloat(String(raw).replace(/[,\s%]/g, ''));
+  if (isNaN(n)) return null;
+  if (hasPct) return n / 100;            // "59.34%" -> 0.5934
+  if (Math.abs(n) > 1) return n / 100;   // "60"      -> 0.60
+  return n;                              // "0.6"     -> 0.60
 }
 
-// Extract the "The Return of Tiger" benchmark from rows ABOVE the perf header
-// (the sheet keeps it as a banner row, so it isn't part of the normal data rows).
-// Uses the column-index map (incl. the D15 block) captured by the last rowsToPerf().
-function extractPerfBenchmark(allRows, headerIdx) {
-  if (!PERF_IDX || !Array.isArray(allRows)) return null;
-  const I = PERF_IDX, d = I.d15 || {}, e = I.ext || {};
-  for (let r = 0; r < headerIdx; r++) {
+// Pick a colour theme + CSS class for a metric group from its sheet label.
+function perfGroupStyle(label, idx){
+  const l = String(label || '').toLowerCase();
+  if (/\bd15\b/.test(l) && !/ext/.test(l)) return { cls:'grp-d15', retColor:'var(--teal)' };
+  if (/ext/.test(l))                       return { cls:'grp-ext', retColor:'var(--yellow)' };
+  if (/\bd7\b/.test(l) || idx === 0)       return { cls:'grp-d7',  retColor:'var(--teal)' };
+  return { cls:'grp-d15', retColor:'var(--teal)' };   // future / unknown groups
+}
+
+// Build the dynamic column model from the sheet's two header rows:
+//   bannerRow – the merged "group" row (D7 / D15 / Extensions - D7 ... / Extensions - D30 ...)
+//   header    – the row that names the meta columns (Type, Batch, show_title, ...)
+// Metric sub-columns are unlabelled in the sheet, so they're auto-named by the standard
+// convention (True LDAU, % Activation, H5/H10/... Ret.) UNLESS the sheet has text in that
+// header cell, in which case the sheet wins.
+function buildPerfModel(header, aboveRows, rowsForWidth){
+  header    = header    || [];
+  aboveRows = aboveRows || [];
+  const find = (...al) => findCol(header, ...al);
+  const meta = [
+    { field:'Type',        idx: find('Type') },
+    { field:'Batch',       idx: find('Batch') },
+    { field:'show_title',  idx: find('show_title','Show Title','Show Name','Title') },
+    { field:'Source Name', idx: find('Source Name','source','sourcename') },
+    { field:'Sub-Genre',   idx: find('Sub-Genre','Sub Genre','Subgenre','Final Subgenre') },
+    { field:'Platform',    idx: find('Platform') },
+    { field:'List',        idx: find('List','Pipeline') },
+    { field:'Extensions',  idx: find('Extensions','Extension') },
+    { field:'Show Length', idx: find('Show Length','Length') },
+  ];
+  // Type / Batch stand in for each other when only one is present in the sheet.
+  { const t = meta.find(m => m.field === 'Type'), b = meta.find(m => m.field === 'Batch');
+    if (t.idx < 0) t.idx = b.idx; if (b.idx < 0) b.idx = t.idx; }
+  const aux = {
+    cms:   find('CMS Link','cmslink','CMS','CMS URL'),
+    clean: find('Clean URL','cleanurl','Source URL','sourceurl','CleanURL','clean_url','Source Link','sourcelink','URL'),
+    id:    find('Show ID','showid'),
+  };
+  // The "group banner" row (D7 / D15 / Extensions ...) sits above the header, but a benchmark
+  // row (The Return of Tiger) can sit there too. Pick the above-row whose meta/title cells are
+  // blank yet carries the most labels out in the metric region.
+  const titleMeta0 = meta.find(m => m.field === 'show_title');
+  const titleIdx0  = titleMeta0 ? titleMeta0.idx : -1;
+  const metaMax = Math.max(-1, ...meta.map(m => (m.idx != null ? m.idx : -1)));
+  let bannerRow = [];
+  let bestScore = -1;
+  for (const row of aboveRows){
+    if (!row) continue;
+    if (titleIdx0 >= 0 && String(row[titleIdx0] || '').trim() !== '') continue; // skip benchmark/data rows
+    let score = 0;
+    for (let c = metaMax + 1; c < row.length; c++) if (String(row[c] || '').trim() !== '') score++;
+    if (score > bestScore){ bestScore = score; bannerRow = row; }
+  }
+  if (bestScore <= 0 && aboveRows.length) bannerRow = aboveRows[aboveRows.length - 1];
+  // Group starts = every non-empty cell in the banner row.
+  const starts = [];
+  for (let c = 0; c < bannerRow.length; c++){
+    const v = String(bannerRow[c] || '').trim();
+    if (v) starts.push({ label:v, start:c });
+  }
+  const firstGroupStart = starts.length ? starts[0].start : header.length;
+  // "Show Length" header cell is blank in the sheet -> it's the gap column just before the first group.
+  const lenMeta = meta.find(m => m.field === 'Show Length');
+  if (lenMeta.idx < 0 && firstGroupStart > 0){
+    const cand = firstGroupStart - 1;
+    if (!meta.some(m => m.field !== 'Show Length' && m.idx === cand)) lenMeta.idx = cand;
+  }
+  // Right edge of the data = last populated column, so the final group gets its true width
+  // (e.g. the 12-wide "Extensions - D30" block).
+  let maxCol = firstGroupStart - 1;
+  const widthScan = [bannerRow, header].concat(rowsForWidth || []);
+  const scanN = Math.min(widthScan.length, 1000);
+  for (let r = 0; r < scanN; r++){
+    const row = widthScan[r] || [];
+    for (let c = row.length - 1; c >= 0; c--){
+      if (String(row[c] || '').trim() !== ''){ if (c > maxCol) maxCol = c; break; }
+    }
+  }
+  // Fallback: if the trailing group collapses (data rows blank there), fall back to widest row.
+  if (starts.length){
+    const lastStart = starts[starts.length - 1].start;
+    if (maxCol < lastStart){
+      let wl = 0; for (const row of widthScan){ if (row && row.length > wl) wl = row.length; }
+      if (wl - 1 > maxCol) maxCol = wl - 1;
+    }
+  }
+  // Build groups + their metric columns.
+  const groups = [];
+  for (let g = 0; g < starts.length; g++){
+    const start = starts[g].start;
+    const end   = (g + 1 < starts.length) ? starts[g+1].start - 1 : maxCol;
+    const width = end - start + 1;
+    if (width <= 0) continue;
+    const st = perfGroupStyle(starts[g].label, g);
+    const cols = [];
+    for (let p = 0; p < width; p++){
+      const idx = start + p;
+      let kind, label;
+      if (p === 0){ kind = 'ldau'; label = 'True LDAU'; }
+      else if (p === 1){ kind = 'pct'; label = '% Activation'; }
+      else { kind = 'ret'; const b = PERF_RET_BUCKETS[p-2]; label = (b != null ? 'H'+b : 'M'+(p-1)) + ' Ret.'; }
+      const hcell = String(header[idx] || '').trim();   // sheet header wins if present
+      if (hcell) label = hcell;
+      cols.push({ key:'m_g'+g+'_c'+p, idx, kind, label });
+    }
+    groups.push({ label:starts[g].label, cls:st.cls, retColor:st.retColor, sep: g > 0, cols });
+  }
+  let primaryRet = null;
+  for (const grp of groups){ const rc = grp.cols.find(c => c.kind === 'ret'); if (rc){ primaryRet = rc.key; break; } }
+  return { meta, aux, groups, primaryRet };
+}
+
+// Turn one sheet row into a perf object: canonical meta keys (so filters / links / sorting keep
+// working) plus one key per metric column from the model.
+function buildPerfRow(r, M, isBench){
+  const obj = { __benchmark: !!isBench };
+  for (const m of M.meta){
+    const raw = (m.idx != null && m.idx >= 0) ? r[m.idx] : '';
+    obj[m.field] = (m.field === 'Show Length') ? toNum(raw) : String(raw == null ? '' : raw).trim();
+  }
+  const ax = M.aux || {};
+  obj['CMS Link']  = (ax.cms   != null && ax.cms   >= 0) ? String(r[ax.cms]   || '').trim() : '';
+  obj['Clean URL'] = (ax.clean != null && ax.clean >= 0) ? String(r[ax.clean] || '').trim() : '';
+  obj['Show ID']   = (ax.id    != null && ax.id    >= 0) ? String(r[ax.id]    || '').trim() : '';
+  for (const g of M.groups){
+    for (const c of g.cols){
+      const raw = r[c.idx];
+      obj[c.key] = (c.kind === 'pct') ? smartPct(raw) : toNum(raw);
+    }
+  }
+  return obj;
+}
+
+function perfHasCol(col){
+  const M = PERF_MODEL;
+  if (!M) return false;
+  if (['Type','Batch','show_title','Source Name','Sub-Genre','Platform','List','Extensions','Show Length'].indexOf(col) >= 0) return true;
+  return M.groups.some(g => g.cols.some(c => c.key === col));
+}
+
+// Fallback model for the bundled seed data (legacy keys) — used only until the first live
+// fetch builds the real model from the sheet.
+const LEGACY_PERF_MODEL = {
+  meta: [], aux: {}, primaryRet: 'H5_Ret_D7',
+  groups: [
+    { label:'D7', cls:'grp-d7', retColor:'var(--teal)', sep:false, cols:[
+      { key:'True Ldau',      kind:'ldau', label:'True LDAU' },
+      { key:'pct_activation', kind:'pct',  label:'% Activation' },
+      { key:'H5_Ret_D7',  kind:'ret', label:'H5 Ret. D7%' },
+      { key:'H10_Ret_D7', kind:'ret', label:'H10 Ret. D7%' },
+      { key:'H15_Ret_D7', kind:'ret', label:'H15 Ret. D7%' },
+    ]},
+    { label:'D15', cls:'grp-d15', retColor:'var(--teal)', sep:true, cols:[
+      { key:'True_Ldau_D15',      kind:'ldau', label:'True LDAU' },
+      { key:'pct_activation_D15', kind:'pct',  label:'% Activation' },
+      { key:'H5_Ret_D15',  kind:'ret', label:'H5 Ret. D7%' },
+      { key:'H10_Ret_D15', kind:'ret', label:'H10 Ret. D7%' },
+      { key:'H15_Ret_D15', kind:'ret', label:'H15 Ret. D7%' },
+    ]},
+    { label:'Extensions - D15', cls:'grp-ext', retColor:'var(--yellow)', sep:true, cols:[
+      { key:'True_Ldau_Ext',      kind:'ldau', label:'True LDAU' },
+      { key:'pct_activation_Ext', kind:'pct',  label:'% Activation' },
+      { key:'H5_Ret_Ext',  kind:'ret', label:'H5 Ret.' },
+      { key:'H10_Ret_Ext', kind:'ret', label:'H10 Ret.' },
+      { key:'H15_Ret_Ext', kind:'ret', label:'H15 Ret.' },
+      { key:'H20_Ret_Ext', kind:'ret', label:'H20 Ret.' },
+      { key:'H25_Ret_Ext', kind:'ret', label:'H25 Ret.' },
+      { key:'H30_Ret_Ext', kind:'ret', label:'H30 Ret.' },
+      { key:'H40_Ret_Ext', kind:'ret', label:'H40 Ret.' },
+      { key:'H50_Ret_Ext', kind:'ret', label:'H50 Ret.' },
+    ]},
+  ],
+};
+
+function rowsToPerf(header, rows, aboveRows, widthRows){
+  PERF_HEADER = (header || []).slice();
+  PERF_MODEL  = buildPerfModel(header, aboveRows || [], widthRows || rows || []);
+  const M = PERF_MODEL;
+  const titleMeta = M.meta.find(m => m.field === 'show_title');
+  const titleIdx  = titleMeta ? titleMeta.idx : -1;
+  console.log('[Dashboard] perf model ->', {
+    groups: M.groups.map(g => g.label + '(' + g.cols.length + ')'),
+    metricCols: M.groups.reduce((s,g)=>s+g.cols.length,0),
+  });
+  const out = (rows || [])
+    .filter(r => titleIdx >= 0 && (r[titleIdx] || '').trim() !== '')
+    .map(r => buildPerfRow(r, M, false));
+  // Keep the active sort valid against the freshly-built columns.
+  if (M.primaryRet && !perfHasCol(perfSort.col)){ perfSort.col = M.primaryRet; perfSort.dir = 'desc'; }
+  return out;
+}
+
+// Pull the "The Return of Tiger" benchmark from the rows ABOVE the header (it lives there as a
+// banner row) using the live column model.
+function extractPerfBenchmark(allRows, headerIdx){
+  if (!PERF_MODEL || !Array.isArray(allRows)) return null;
+  const M = PERF_MODEL;
+  const titleMeta = M.meta.find(m => m.field === 'show_title');
+  const titleIdx  = titleMeta ? titleMeta.idx : -1;
+  if (titleIdx < 0) return null;
+  for (let r = 0; r < headerIdx; r++){
     const row = allRows[r] || [];
-    const title = String(I.title >= 0 ? (row[I.title] || '') : '');
+    const title = String(row[titleIdx] || '');
     if (!/return\s+of\s+tiger/i.test(title)) continue;
-    return {
-      'show_title': title.trim(),
-      'Type': '—','Batch': '—','Sub-Genre': '—','Platform': '—','List': '—','Source Name': '—','Clean URL': '',
-      'Show Length':       toNum(row[I.len]),
-      'True Ldau':         toNum(row[I.ldau]),
-      'pct_activation':    toPct(row[I.act]),
-      'H5_Ret_D7':         toNum(row[I.h5]),
-      'H10_Ret_D7':        toNum(row[I.h10]),
-      'H15_Ret_D7':        toNum(row[I.h15]),
-      'True_Ldau_D15':       toNum(row[d.ldau]),
-      'pct_activation_D15':  toPct(row[d.act]),
-      'H5_Ret_D15':          toNum(row[d.h5]),
-      'H10_Ret_D15':         toNum(row[d.h10]),
-      'H15_Ret_D15':         toNum(row[d.h15]),
-      'True_Ldau_Ext':       toNum(row[e.ldau]),
-      'pct_activation_Ext':  toPct(row[e.act]),
-      'H5_Ret_Ext':          toNum(row[e.h5]),
-      'H10_Ret_Ext':         toNum(row[e.h10]),
-      'H15_Ret_Ext':         toNum(row[e.h15]),
-      'H20_Ret_Ext':         toNum(row[e.h20]),
-      'H25_Ret_Ext':         toNum(row[e.h25]),
-      'H30_Ret_Ext':         toNum(row[e.h30]),
-      'H40_Ret_Ext':         toNum(row[e.h40]),
-      'H50_Ret_Ext':         toNum(row[e.h50]),
-      '__benchmark': true
-    };
+    const obj = buildPerfRow(row, M, true);
+    obj['show_title'] = title.trim();
+    return obj;
   }
   return null;
 }
@@ -2627,7 +2530,7 @@ async function fetchLive() {
   console.log(`[Dashboard] catalogue header @ row ${catPick.headerIdx+1}:`, catHdr);
   console.log(`[Dashboard] performance header @ row ${pfPick.headerIdx+1}:`, pfHdr);
   const newData = rowsToShows(catHdr, catRows.slice(catPick.headerIdx + 1));
-  const newPerf = rowsToPerf(pfHdr,  pfRows.slice(pfPick.headerIdx + 1));
+  const newPerf = rowsToPerf(pfHdr,  pfRows.slice(pfPick.headerIdx + 1), pfRows.slice(0, pfPick.headerIdx), pfRows);
   // Tiger benchmark lives in the rows ABOVE the perf header
   const newPerfBench = extractPerfBenchmark(pfRows, pfPick.headerIdx);
   // AIWC sheet — has 2 benchmark rows ABOVE the header.
@@ -2655,7 +2558,7 @@ let _signature = '';
 function _sig(d, p) {
   // Quick signature so we don't re-render when nothing changed (saves work + scroll-position)
   return (d ? d.length + ':' + (d[d.length-1]?.['Show Name']||'') : '') + '|' +
-         (p ? p.length + ':' + (p[p.length-1]?.['show_title']||'') + ':' + (p[p.length-1]?.['H5_Ret_D7']||'') : '');
+         (p ? p.length + ':' + (p[p.length-1]?.['show_title']||'') : '');
 }
 
 async function refreshFromSheet() {
